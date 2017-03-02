@@ -1,0 +1,4 @@
+Most practical option. Define the object on which to apply the function.
+Example: in Write2db I have field.data = function(file){ ...
+Before of running that, I define file = [n] with n = file I pick up from the f list
+After that, all I have to do is running a set of lines of my script and checking the intermediate files.
