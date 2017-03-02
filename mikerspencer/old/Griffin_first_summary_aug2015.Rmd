@@ -1,0 +1,132 @@
+---
+title: "Griffin first R plots"
+author: "Daniele Ferraretto"
+date: "28/08/2015"
+output:
+  html_document:
+    highlight: tango
+    theme: united
+    toc: yes
+  pdf_document:
+    toc: yes
+---
+
+```{r setup, echo=F, message=F}
+# working directory is overwritten when this is knited
+fielddata <- read.csv("~/My PhD/R/mikerspencer-griffin-e2070d91e30c/mikerspencer-griffin-e2070d91e30c/fielddata.csv", header=FALSE,stringsAsFactors=F)
+
+labdata <- read.csv("~/My PhD/R/mikerspencer-griffin-e2070d91e30c/mikerspencer-griffin-e2070d91e30c/labdata.csv", header=FALSE, stringsAsFactors=F)
+
+setwd("~/~/My PhD/R/mikerspencer-griffin-e2070d91e30c/mikerspencer-griffin-e2070d91e30c")
+library(ggplot2)
+library(plyr)
+```
+
+## Latest sampling date imported
+
+```{r date, comment=""}
+fielddata = arrange(fielddata,V1)
+tail(fielddata$Date, n=1)
+```
+
+## Precipitation through time
+
+http://docs.ggplot2.org/current/
+
+```{r precip, warning=F}
+# read data
+precip = dbGetQuery(db, "SELECT date, sample, vals FROM fielddata
+           WHERE variable='precip depth'")
+
+# plot with ggplot
+ggplot(precip, aes(date, vals)) +
+   geom_point() +
+   facet_grid(sample ~ .) +
+   xlab("Date") +
+   ylab("Precipitation (mm)")
+```
+
+## Precipitation through the year
+
+http://strftime.org/
+
+```{r precip annual, warning=F}
+# Add Julian date
+precip$doy = strftime(precip$date, format = "%j")
+
+# plot with ggplot
+ggplot(precip, aes(doy, vals)) +
+   geom_point() +
+   facet_grid(sample ~ .) +
+   xlab("Day of year (Julian)") +
+   ylab("Precipitation (mm)")
+```
+
+## Precipitation against itself
+
+http://seananderson.ca/2013/10/19/reshape.html
+
+```{r precip check, warning=F}
+# Make into wide format
+x = dcast(precip, date ~ sample, value.var="vals")
+# Plot each data column against the others
+pairs(x[,2:4])
+```
+
+## Nitrogen
+
+```{r nitrogen, warning=F}
+# Select nitrogen precip data
+precip.n = dbGetQuery(db, "SELECT date, sample, variable, vals AS nite FROM labdata
+           WHERE (variable='NO3' OR variable='NO4')
+           AND
+           (sample='C30D1' OR sample='C31D1' OR sample='C30D2')")
+
+# Plot NO3 and NO4
+# Wide format
+x = dcast(precip.n, date + sample ~ variable, value.var="nite")
+# Plot all as points
+ggplot(x, aes(NO4, NO3)) +
+   geom_point(aes(colour=sample))
+
+# Add a smoother and split out into separate plots
+ggplot(x, aes(NO4, NO3)) +
+   geom_point(aes(colour=sample)) +
+   facet_grid(sample ~ .) +
+   geom_smooth(method=loess, aes(colour=sample))
+```
+
+## Precipiation and nitrogen
+
+```{r precip nitrogen, warning=F}
+# Merge precip and nitrogen
+x = merge(precip, precip.n, by=c("date", "sample"))
+
+ggplot(x, aes(vals, nite)) +
+   geom_point(aes(colour=sample)) +
+   facet_grid(variable ~ sample, scales="free") +
+   geom_smooth(method=loess, aes(colour=sample)) +
+   xlab("Daily precipitation (mm)") +
+   ylab("Nitrogen")
+```
+
+## Stemflow and nitrogen
+
+```{r stem nitrogen, warning=F}
+stem = dbGetQuery(db, "SELECT date, sample, vals FROM fielddata
+           WHERE variable='stem vol' AND OVERFLOW!='T'")
+
+n = unique(stem$sample)
+
+stem.n = dbGetQuery(db, paste0("SELECT date, sample, variable, vals AS nite FROM labdata WHERE (variable='NO3' OR variable='NO4') AND (sample='", paste(n, collapse="' OR sample='"), "')"))
+
+x = merge(stem, stem.n, by=c("date", "sample"))
+
+ggplot(x, aes(vals, nite)) +
+   geom_point(aes(colour=sample)) +
+   facet_grid(variable ~ sample, scales="free") +
+   geom_smooth(method=loess, aes(colour=sample)) +
+   xlab("Stem flow vol ()") +
+   ylab("Nitrogen") +
+   ylim(0, 20)
+```

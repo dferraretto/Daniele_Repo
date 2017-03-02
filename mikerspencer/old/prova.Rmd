@@ -1,0 +1,32 @@
+
+---
+title: "prova"
+author: "Daniele Ferraretto"
+date: "Thursday, January 25, 2016"
+output: word_document
+highlight: tango
+---
+
+This documents follows the first version, giving an example of how the calculations on TF, SF and RF data are applied in R to the raw data. I will skip the descriptive part of the database focusing straight to the output values. the attached *Griffin_20140424.xls* file contains the fieldwork data I will use as example for the calculations.  
+The main outcome from this work has been finding out a bug in the script that reads the .xls files (all the samples starting from November 2013) which affected the N lab data. Even if it converted correctly them from the Nx concentration to N, subtracting the blanks and making 0 any negative values, the script ultimately copied the raw lab data in the database, ignoring the transformations.
+_Question for Kate_: the script subtract the blanks from the values no matter what the mean blank value is. This means that if the value is negative it will increase the lab value of the samples (twice minus makes +). Is this OK or should I makes blanks always >=0?
+
+```{r setup, echo=F, message=F}
+# working directory is overwritten when this is knited, this needs to be changed when running from the pc
+setwd("C:/Users/Daniele Ferraretto/Documents/PhD-local_repo/field_lab")
+library(RSQLite)
+library(ggplot2)
+library(reshape2)
+db = dbConnect(SQLite(), dbname="Griffin.SQLite")
+```
+# Part 1. From paper to database: Griffin.SQLite
+
+The scripts converting the raw field and lab data into values have been written by Mike Spencer. I will show which information is contained in the SQLite db _Griffin.SQlite_ and briefly describe the calculations made to obtain the data written into the __fielddata__ and __labdata__ tables. 
+
+## Example sampling date
+
+```{r date}
+dbGetQuery(db, "SELECT date, sample, site, variable, vals FROM fielddata WHERE (variable IS 'through vol' OR variable IS 'through depth' OR variable IS 'stem vol' OR variable IS 'precip depth') AND (date = '2014-04-24') AND (site IS 'Treatment' OR site IS 'Both') ORDER BY variable DESC")
+dbGetQuery(db, "SELECT date, sample, site, variable, vals FROM labdata WHERE date = '2014-04-24' ORDER BY variable DESC")
+# nascondi lo script, presenta i dati. cioe' tutti i dati di una singola data.
+```

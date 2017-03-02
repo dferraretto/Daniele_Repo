@@ -1,0 +1,194 @@
+---
+title: "Maths in Griffin scripts"
+author: "Daniele Ferraretto"
+date: "Thursday, January 25, 2016"
+output: word_document
+highlight: tango
+---
+
+This documents follows the first version, giving an example of how the calculations on TF, SF and RF data are applied in R to the raw data. I will skip the descriptive part of the database focusing straight to the output values. The attached *Griffin_20140424.xls* file contains the fieldwork data I will use as example for the calculations.  
+The main outcome from this work has been finding out a bug in the script that reads the .xls files (all the samples starting from November 2013) and affected the output Nx values. Even if the script converted correctly them from the Nx concentration to N-Nx, subtracting the blanks and making 0 any negative values, it ultimately saved the raw untouched lab data in the database, ignoring the transformations. This problem has been fixed and the new results are available at the end of this document, together with some extra information for each relevant transformation contained in the scripts.  
+
+```{r setup, echo=F, message=F}
+# working directory is overwritten when this is knited, this needs to be changed when running from the pc
+setwd("M:/My PhD/R/PhD-local_repo/field_lab")
+library(RSQLite)
+library(ggplot2)
+library(reshape2)
+db = dbConnect(SQLite(), dbname="Griffin.SQLite")
+```
+# Part 1. From paper to database: Griffin.SQLite
+
+The scripts converting the raw field and lab data into values have been written by Mike Spencer. I will show which information is contained in the SQLite db _Griffin.SQlite_ and briefly describe the calculations made to obtain the data written into the __fielddata__ and __labdata__ tables. 
+
+*NOTE: There is an error in labelling the site for pecipitation and for streamflow. As at the moment it doesn't affect the calculations (site is a reduntant information) I will try to correct it after completing this document*
+
+## Example sampling date: 24th April 2014.  
+In order to make the data more readable, only the Control plot and precipitation data have been extracted from the field data. Similarly, only NO3.N and NH4.N data from lab data are displayed (ignoring pH, litter mass and POC concentration), to reduce the number of lines of the printout. These values are generated from the calculations as displayed in the _Maths in Griffin scripts_ file, in particular:
+
+```{r Nx cum}
+dbGetQuery(db, "SELECT date, sample, variable, vals FROM fielddata WHERE (variable IS 'through vol' OR variable IS 'through depth' OR variable IS 'stem vol' OR variable IS 'precip depth') AND (date = '2014-04-24') AND (site IS 'Control' OR site IS 'Both') ORDER BY variable DESC")
+dbGetQuery(db, "SELECT date, sample, variable, vals FROM labdata WHERE ( variable IS 'NO3.N' OR variable IS 'NH4.N') AND (date = '2014-04-24') AND (site IS 'Control' OR site IS 'Both') ORDER BY variable DESC")
+
+```
+
+
+### Variables in fielddata: how they are calculated  
+
+For the raw data, see to the .xls file.
+
+#### precip depth (mm)
+$precip depth = [(Bottle.full.g-Bottle.empty.g-H3PO4.g)/funnel/days]*10$,  
+where $funnel = pi * 7.5^2$ = area funnel,  
+$days$ = days passed since last sampling (27 days since 25 March 2014)  
+
+#### stem vol (l)
+Samples are diveded into small/large, then volumes are calculated as:   
+$stem vol[large] = (stem.Depth.cm[large] - 0.8857) / 0.523$  
+$stem vol[small] = (stem.Depth.cm[small] - 0.6078) / 1.3756$  
+
+#### through vol (l)
+Volumes are calculated according to the barrel shape, as  
+$through vol[circle] = (through.Depth.cm[circle] - 0.8857) / 0.523$  
+$through vol[square] = (through.Depth.cm[square] - 0.9357) / 0.791$  
+
+#### through depth (mm)
+$through depth = (through.vol * 10^6) / (4.02 * 0.234 * 2 * gutter + colander) / 10^6$
+where $gutter = cos(gut * pi / 180), gut = angle of gutter with soil$
+and $colander = pi * (12.25 / 100)^2$  
+
+Water volumes from the throughfall and stemflow barrels are calculated measuring the water depth measured in the middle of the barrel. A calibration curve was produced per each type of barrel in lab to transform the water depth into a volume.
+
+### Variables in labdata: how they are calculated
+
+#### N from Nitrate (mg/l)
+$N-NO3.N = (NO3.concentration.mg.L * 14/62)$; this is calculated for all samples including blanks.
+Then the mean blank N-NO3 value is calculated and subtracted from the N-NO3 values. Values lower than 0 are made 0  
+
+#### N from ammonium (mg/l)
+$N-NH4.N = (NH4.concentration.mg.L * 14/18)$; this is calculated for all samples including blanks.
+Then the mean blank N-NH4 value is calculated and subtracted from the N-NH4 values. Values lower than 0 are made 0  
+
+# Part 2. From Griffin.SQLite to daily values: Daily_Griffin.SQLite
+```{r setup daily, echo=F, message=F}
+# working directory is overwritten when this is knited, this needs to be changed when running from the pc
+setwd("M:/My PhD/R/PhD-local_repo/field_lab")
+library(RSQLite)
+library(ggplot2)
+library(reshape2)
+db = dbConnect(SQLite(), dbname="Daily_Griffin.SQLite")
+```
+
+Here I extract an example of the daily values as they have been saved in the new Daily.Griffin.SQLite db. Now the data that have been split into daily data can be grouped into monthly data or into any other period of time. The db follows the rationale of "Griffin.SQLite": data are collected into 2 tables - fielddata and labdata. To make this readable I will extract a single day belonging to the previous sampling interval to show comparison with the cumulated data previously shown
+
+```{r Nx daily}
+dbGetQuery(db, "SELECT date, sample, site, variable, vals FROM fielddata WHERE (variable IS 'through vol' OR variable IS 'through depth' OR variable IS 'stem vol' OR variable IS 'precip depth') AND (date = '2014-04-20') AND (site IS 'Control' OR site IS 'Both') ORDER BY variable DESC")
+dbGetQuery(db, "SELECT date, site, sample, variable, vals FROM labdata WHERE ( variable IS 'NO3.N' OR variable IS 'NH4.N') AND (date = '2014-04-20') AND (site IS 'Control' OR site IS 'Both') ORDER BY variable DESC")
+
+```
+
+No special calculations have been done in the scripts, except dividing the cumulated values by number of days since last sampling. Most of the script is aimed to populate the daily database properly. NB: need to create a table 
+
+# Mean values per ha and aggregation by month
+
+## Throughfall (TF)  
+
+This script merge the field data with N-NO3 and N-NH4 values. Before doing that a comparison between mean RF depths and mean TF depths are calculated to check for any incongruences in the field data. These values are shown in table 4 at the end of this document
+
+### N-Nx mass in TF
+
+The script applies to both forms of Nx separately: N-NO3 and N-NH4.  It is expressed in mg/m2/day and applies to each sample the following formula:  
+
+$N-Nx=TF.daily.depth.mm*TF.Nx.daily.conc(mg/l)$  
+
+
+**Example: C10T1**  
+Throughfall volume and depth:
+```{r Nx C10T1a, echo = FALSE}
+
+dbGetQuery(db, "SELECT date, sample, site, variable, vals FROM fielddata WHERE sample = 'C10T1' AND date = '2014-04-20'")  
+
+```
+Throughfall N-NO3 and N-NH4 concentration:
+```{r Nx C10T1b, echo = FALSE}
+
+dbGetQuery(db, "SELECT date, sample, site, variable, vals FROM labdata WHERE sample = 'C10T1' AND date = '2014-04-20'")  
+
+```
+The results of the script are 1.024mg/m2/d of N-NO3 and 0.660mg/m2/d of N-NH4.   
+
+The mean daily value among all available samples is then calculated, ignoring NA values. Results are 0.935 mg/m2/d of N-NO3 and 0.641mg/m2/d of N-NH4. These values are transformed into g/ha/day by multiplying each value per 10000/1000. Finally, the monthly mean TF value is calculated as the sum of the mean daily values per hectare. The values are shown in Table @. N-NO3 in April is 252.30 g/ha, which is consistent with the daily value, considering that the month is the sum of a daily value originated by the data collected on April the 24th and a daily value originated by the following collection in May (days 25th-30th April).
+
+
+## Stemflow (SF)
+
+### N-Nx mass in SF
+Differently from TF the script uses the information gathered through a dbh survey held in 2010 (by M. Harbinson) and updated in 2015 (by the writer) which sorts trees in 8 dbh classes (see Table 1). the 22 SF trees have been chosen to represent all classes properly. The script calculates a mean by dbh class and date, followed by the mean (of means) among the dbh classes by date so that the resulting matrix (values per "average tree") is multiplied by the average number of trees per ha. This number proceeds as a calculation from 2770trees/ha reduced by 5th row and 3rd tree removal during thinning) whereas 1421 trees/ha per C might be more appropriate, including a further reduction due to attrition. However at the moment such distinction has not be done. Similarly to TF, NA have been ignored when calculating the means (na.rm=TRUE)
+
+_Number of trees per ha = 1865 trees/ha_  
+This daily value is finally aggregated by month. 
+
+* STEP 1: calculate the mass of N-Nx per sample  
+* STEP 2: calculate the mean by dbh class and date
+* STEP 3: calculate the mean by date (mean of means = the _average tree_)
+* STEP 4: $N-Nx$(g/ha/day) $= average tree *1865/1000$  
+* STEP 5: aggregate the obtained daily value by month
+
+To give an example of these steps I will extract the data from 20-04-2014. In order to reduce the number of lines I will only show N-NO3 values, omitting N-NH4.
+
+```{r SF vol , echo = FALSE}
+
+dbGetQuery(db, "SELECT date, sample, site, variable, vals FROM fielddata WHERE variable = 'stem vol' AND date = '2014-04-20'")  
+
+```
+```{r SF Nx , echo = FALSE}
+
+dbGetQuery(db, "SELECT date, sample, site, variable, vals FROM labdata WHERE variable = 'NO3.N' AND date = '2014-04-20' AND (sample GLOB 'C1*' OR sample GLOB 'T1*')")  
+
+```
+
+
+**Example: Step 2 on 20-04-2014 N-NO3 SF data**  
+
+![N-NO3 SF mass, 20-04-2014](M:\My PhD\R\PhD-local_repo\output_tables_plots\step2.png)  
+_Table 1a: N-NO3 mass per dbh class, 20-04-2014_
+
+![N-NO3 SF mass, 20-04-2014](M:\My PhD/R/PhD-local_repo\output_tables_plots\step3.png)  
+_Table 2: N-NO3 mass per date ("average tree"), 20-04-2014_
+
+## Rainfall (RF)
+
+The script only considers the rainfall gauges and not the fog gauge. I will compare rain vs fog values and take a decision on how to consider the potentially extra N collected as fog (partly being dry dep?). The present assumption is, however, reductive in terms of N input and hence more cautious. Before proceeding with the below mentioned steps, the script calculates a mean RF depth (C30D1 and C31D1) to compare it with TF depth. Table @ is available at the end of this document
+
+### N-Nx mass in RF
+
+* STEP 1: calculate the daily mass of N-Nx per each RF sample (g/ha/day): $N-Nx = RF.daily.vol.mm * N-Nx.daily.conc * 10000/1000$  
+
+**Example step1: 20-04-2014**  
+
+![N-NO3 rf mass, 20-04-2014](M:\My PhD\R\PhD-local_repo\output_tables_plots\rf_step1.png)  
+_Table 3: N-NO3 mass in RF on 24-04-2014_
+
+* STEP 2: mean value by date  
+* STEP 3: aggregate by month    
+Being the last two steps straight forward, I will not add an example in this version of the document, but I can add a wider sample on request. 
+
+# N-NO3 and N-NH4 in RF, TF and SF. 
+This first table shows a comparison between RF and TF depths. All the following table are contained in the *RF_TF_SF_20160126.xls* file. The first table shows a comparison between RF and TF depths. The other 4 tables show nx masses per month per water flux (RF, TF, SF).
+
+![RFvsTF depths](M:\My PhD\R\PhD-local_repo\output_tables_plots\RF_TF_depth.png)  
+_Table 4: RF and TF depth per month_
+This table does not include SF as its aim was to show inconguences between significant water fluxes. SF represents a small fraction of the water flux through the canopy and it would not add significant information to this first check.  
+
+Below data from 2011 to December 2015 are shown in 4 tables. Data are clustered per month. 
+
+![N-Nx mass, 2012](M:\My PhD\R\PhD-local_repo\output_tables_plots\RFTFSF_2012.png)  
+_Table 5: N-Nx mass, 2011/2012_
+![N-Nx mass, 2013](M:\My PhD\R\PhD-local_repo\output_tables_plots\RFTFSF_2013.png)  
+_Table 6: N-Nx mass, 2013_
+![N-Nx mass, 2013](M:\My PhD\R\PhD-local_repo\output_tables_plots\RFTFSF_2013.png)  
+_Table 7: N-Nx mass, 2014_
+![N-Nx mass, 2015](M:\My PhD\R\PhD-local_repo\output_tables_plots\RFTFSF_2015.png)  
+_Table 8: N-Nx mass, 2015_
+
+

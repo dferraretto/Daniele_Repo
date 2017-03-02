@@ -1,0 +1,195 @@
+---
+title: "Maths in Griffin scripts"
+author: "Daniele Ferraretto"
+date: "Monday, December 21, 2015"
+output:
+  html_document:
+    highlight: tango
+    theme: united
+    toc: yes
+---
+
+This documents describes the basic calculations imbedded in the scripts which produce the database(s) containing all the collected data from october 2011 to the present. It starts with a brief description of the SQLite db structure, to then showing how the field data and the lab data have been processed before being written into the db.
+
+```{r setup, echo=F, message=F}
+# working directory is overwritten when this is knited, this needs to be changed when running from the pc
+setwd("M:/My PhD/R/PhD-local_repo/repo")
+library(RSQLite)
+library(ggplot2)
+library(reshape2)
+db = dbConnect(SQLite(), dbname="Griffin.SQLite")
+```
+# Part 1. From paper to database: Griffin.SQLite
+
+The scripts converting the raw field and lab data into values have been written by Mike Spencer. I will show which information is contained in the SQLite db _Griffin.SQlite_ and briefly describe the calculations made to obtain the data written into the __fielddata__ and __labdata__ tables. 
+
+## Latest sampling dates
+
+```{r date}
+head(dbGetQuery(db, "SELECT DISTINCT(date) FROM fielddata ORDER BY date DESC"), n = 4)
+```
+
+## The SQLite db structure: fieldata and labdata tables
+
+```{r structure}
+dbGetQuery(db,"PRAGMA table_info(fielddata)")
+
+dbGetQuery(db,"PRAGMA table_info(labdata)")
+
+dbGetQuery(db, "SELECT DISTINCT (variable) FROM fielddata ")
+
+dbGetQuery(db, "SELECT DISTINCT (variable) FROM labdata")
+
+```
+The variable "littermass" indicated the dry mass of the litter collected on the throughfall gutter and colander after being oven dried at 80 °C until the weight stabilises.   
+The variable "acidity" shows the initial value of acidity of the DOC water samples before acidification. These variables have not been used for any of the described calculations at the present.  
+
+### Variables in fielddata: how they are calculated
+
+#### precip depth
+$precip depth = [(Bottle.full.g-Bottle.empty.g-H3PO4.g)/funnel/days]*10$,  
+where $funnel = pi * 7.5^2$ = area funnel,  
+$days$ = days passed since last sampling  
+
+#### stageboard cm
+As registered in field
+
+#### v-notch flow (l/s)
+Field data (v-notch flow) are converted into _Q_ through the tables from _Discharge measurement structures, Bos, 1989_
+
+#### gauged flow (l/s)
+Calculate as $litres / time$, this information can be collected only when flows are reasonably low and it requires two people (stopwatch and bucket).  
+
+#### stem vol (l)
+Samples are diveded into small/large, then volumes are calculated as:   
+$stem vol[large] = (stem.Depth.cm[large] - 0.8857) / 0.523$  
+$stem vol[small] = (stem.Depth.cm[small] - 0.6078) / 1.3756$  
+
+#### through vol (l)
+Volumes are calculated according to the barrel shape, as  
+$through vol[circle] = (through.Depth.cm[circle] - 0.8857) / 0.523$  
+$through vol[square] = (through.Depth.cm[square] - 0.9357) / 0.791$  
+
+#### through depth
+$through depth = (through.vol * 10^6) / (4.02 * 0.234 * 2 * gutter + colander) / 10^6$
+where $gutter = cos(gut * pi / 180), gut = angle of gutter with soil$
+and $colander = pi * (12.25 / 100)^2$  
+
+### Variables in labdata: how they are calculated
+
+#### Nitrate
+$N-NO3.N = NO3.concentration.mg.L * 14/62$  
+The mean blank value, also expressed as N-NO3, is then calculated and subtracted from the N-NO3 values. Values lower than 0 are made 0  
+
+$N-NH4.N = NH4.concentration.mg.L * 14/18$  
+The mean blank value is then calculated and subtracted from the N-NO3 values. Values lower than 0 are made 0  
+
+# Part 2. From Griffin.SQLite to daily values: Daily_Griffin.SQLite
+```{r setup 2, echo=F, message=F}
+# working directory is overwritten when this is knited, this needs to be changed when running from the pc
+setwd("M:/My PhD/R/PhD-local_repo/field_lab")
+library(RSQLite)
+library(ggplot2)
+library(reshape2)
+db = dbConnect(SQLite(), dbname="Daily_Griffin.SQLite")
+```
+
+Here I show briefly how the data are stored in the SQLite db I use to aggregate the data per month, The db follows the rationale of "Griffin.SQLite": data are collected into 2 tables - fielddata and labdata. I also show the levels of the variable in each table.
+
+
+## SQLite structure: the fieldata and labdata tables
+
+```{r daily structure}
+dbGetQuery(db,"PRAGMA table_info(fielddata)")
+
+dbGetQuery(db,"PRAGMA table_info(labdata)")
+
+```
+As shown in the lists of the variables levels below, at the moment this daily db is populated only with the values of rainfall depth, throughfall volume and depth, stemflow volume and depth, plus streamflow data which have not been used yet. Other data like those from litter will be imported later
+
+```{r daily variables}
+dbGetQuery(db, "SELECT DISTINCT (variable) FROM fielddata ")
+
+dbGetQuery(db, "SELECT DISTINCT (variable) FROM labdata")
+
+```
+No special calculations have been done in the scripts, except dividing the cumulated values per number of days since last sampling. NB: se non qui da qualch ealtra parte ma devo dare le granezze in cui sono espresse le varie variabili (mg/l, cazzi/m^2, ecc.)
+
+# Mean values per ha and aggregation by month
+
+## Throughfall (TF)
+
+### N-Nx mass in TF
+The formula below applies to both form of Nx: N-NO3 and N-NH4. It is expressed in g/ha/day and applies to each sample:  
+
+$N-Nx=TF.daily.depth.mm*TF.Nx.daily.conc(mg/l)*10000/1000$  
+
+The mean daily among all available samples is then calculates (hence removing NA and calculating the mean). Finally, the monthly mean TF value is the sum of the mean daily values.
+
+## Stemflow (SF)
+
+### N-Nx mass in SF
+Differently from TF the script calculates a mean by dbh class and date, followed by the mean (of means) by date so that the resulting matrix (values per average tree) is multiplied per average number of trees per ha. This number proceeds as a calculation from 2770trees/ha reduced of 5th row and 3rd tree) whereas 1439 trees/ha per C might be more appropriate, including a further reduction due to attrition. However at the moment such distinction has not be done. Similarly to TF, Na have been ignored when calculating the means (na.rm=TRUE)
+
+_Number of trees per ha = 1883 trees/ha_  
+This daily value is finally aggregated by month. 
+
+* STEP 1: calculate the mass of N-Nx per sample  
+* STEP 2: calculate the mean by dbh class and date
+* STEP 3: calculate the mean by date (mean of means = the _average tree_)
+* STEP 4: $N-Nx$(g/ha/day) $= average tree *1883/1000$  
+* STEP 5: aggregate the obtained daily value by month
+
+## Rainfall (RF)
+The script only considers the rainfall gauges and not the fog gauge. I can build up a script to check rain vs fog values and take decisions on how to consider the potentially extra N collected as fog (partly being dry dep?). This assumption is, however, reductive in terms of N input and hence more cautious.  
+
+### N-Nx mass in 
+* STEP 1: calculate the daily mass of N-Nx per each RF sample (g/ha/day): $N-Nx = RF.daily.vol.mm*N-Nx.daily.conc*10000/1000$  
+
+* STEP 2: mean value by date  
+* STEP 3: aggregate by month  
+
+# First results after corrections 
+
+## RF and TF depths
+
+![RF-TF depths, 2011/2012](C:\Users\s1373890\Local Documents\images for R markdown\table_1.png)  
+_Table 1: RF and TF depths, 2011/2012_
+
+![RF-TF depths, 2013](C:\Users\s1373890\Local Documents\images for R markdown\table_2.png)  
+_Table 2: RF and TF depths, 2013_  
+
+The reduced amounts of precipitation could be affected by the fact that there was no sampling in September (or the information got lost?). That is also shown but a relatively low annual precipitation, if compared to the previous and following years - or it could simply be a relatively dry year. 
+
+![RF-TF depths, 2014](C:\Users\s1373890\Local Documents\images for R markdown\table_3.png)  
+_Table 3: RF and TF depths, 2014_  
+A quick calculation on recent data show how the maximum values of RF generated by an overflowing data is about 143mm/month. Data from November are higher because they are partially generated by an overflowing data ()
+
+![RF-TF depths, 2015](C:\Users\s1373890\Local Documents\images for R markdown\table_4.png)  
+_Table 4: RF and TF depths, 2015_  
+
+## N-NO3 and N-NH4 mass per ha in RF, TF and SF
+
+```
+{r tables echo = FALSE}
+# ![N-Nx mass, 2012](C:\Users\s1373890\Local Documents\images for R markdown\Nx_2011_2012.png)  
+_Table 5: N-Nx mass, 2011/2012_
+
+# ![N-Nx mass, 2013](C:\Users\s1373890\Local Documents\images for R markdown\Nx_2013.png)  
+_Table 6: N-Nx mass, 2013_  
+The reduced amounts of Nx could be affected by the fact that there was no sampling in September and that could have caused a quantitative (volumes due to overflowing) and qualitative (loss in N due to biological activity) loss of information.
+
+# ![N-Nx mass, 2014](C:\Users\s1373890\Local Documents\images for R markdown\Nx_2014.png)  
+_Table 7: N-Nx mass, 2014_  
+This year shows the highest deposition event (April-May) and the highest annual deposition (12.67kg/ha N-NO3, 0.39Kg/ha N-NH4)  
+
+# ![N-Nx mass, 2015](C:\Users\s1373890\Local Documents\images for R markdown\Nx_2015.png)
+_Table 8: N-Nx mass, 2015_  
+
+```
+
+# Notes
+* After data from June/July 2013, showed a TF depth apparently >> RF, I ran a number of controls and found some incongruences in dates leading to errors in the calculations in R. After all dates have been checked and compared with the original paper files I ran again the scripts and the results are quite different, as it is shown in table 1-8.
+* I also ran a check on max values in RF and corrected a val in 2012 where C30D1 and C30D3 were exchanged, 
+* Calculations on the number of trees per ha are attached to the mail as .xls file
+* Tables in this document are attached as image for reasons of layout. They are originated in R and then adjusted in Excel, where the percentage columns have been added
