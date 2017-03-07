@@ -1,4 +1,3 @@
-# This is gonna test the changes on a changed version from my laptop
 #
 #
 #####            OUTLIERS            ##########
@@ -7,7 +6,7 @@
 
 # Outlier removal by the Tukey rules on quartiles +/- 1.5 IQR
 # 2016 Klodian Dhana
-#this temp line is to test GitHub from my laptop
+
 
 rm(list=ls())
 
