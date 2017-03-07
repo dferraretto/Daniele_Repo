@@ -7,6 +7,8 @@
 
 # Outlier removal by the Tukey rules on quartiles +/- 1.5 IQR
 # 2016 Klodian Dhana
+#this temp line is to test GitHub from my laptop
+
 rm(list=ls())
 
 
