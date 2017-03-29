@@ -49,7 +49,7 @@ RF.m.vol$value = RF.m.vol$value/280 # 280 is the result of the ration maximum mo
 # Ninput <- long.N.RFTSW[long.N.RFTSW$variable %like% "N.RF"| long.N.RFTSW$variable %like% "N.fog",]
 N.input <- long.N.RFTSW[long.N.RFTSW$variable %in% "NH4.N.RF" | long.N.RFTSW$variable %in% "NO3.N.RF"| long.N.RFTSW$variable %in% "NH4.N.fog"| long.N.RFTSW$variable %in% "NO3.N.fog",]
 
-x = ggplot(data = N.input, aes (month, value, fill = variable))
+x = ggplot(data = N.input, aes (month, value, fill = variable)) 
 
 plot.RFfog = x + geom_bar(stat = "identity", position = "dodge") + 
   scale_fill_manual(values = c("Sky Blue", "royal blue", "grey30", "grey60", "darkblue"), name = " N flux \n and form", 
