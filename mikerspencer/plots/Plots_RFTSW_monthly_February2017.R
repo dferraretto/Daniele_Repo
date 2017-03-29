@@ -7,6 +7,7 @@
 #          Correlations on monthly data
 #
 # -------------------------------------------------------
+# to run this script you need to run RFTSW_monthly first, including the long version df
 
 library(psych) 
 
@@ -39,7 +40,7 @@ RF.m.vol = transform(RF.m.vol, mY = as.yearmon(as.character(mY), "%Y%m"))
 RF.m.vol$month = format(RF.m.vol$mY, "%m")
 RF.m.vol$year = format(RF.m.vol$mY, "%Y")
 colnames(RF.m.vol)[2] = "value"
-RF.m.vol$variable = "prec"
+RF.m.vol$variable = "xprec"
 RF.m.vol = RF.m.vol[RF.m.vol$year<2017&RF.m.vol$year>2011,]
 RF.m.vol$value = RF.m.vol$value/280 # 280 is the result of the ration maximum monthly prec depth/max main y axis value (~0.6):
 # when a second axis is used (see below, scale_y_continuous), then the same value is used to turn the secondary scale into the originary values
@@ -51,14 +52,18 @@ N.input <- long.N.RFTSW[long.N.RFTSW$variable %in% "NH4.N.RF" | long.N.RFTSW$var
 x = ggplot(data = N.input, aes (month, value, fill = variable))
 
 plot.RFfog = x + geom_bar(stat = "identity", position = "dodge") + 
+  scale_fill_manual(values = c("Sky Blue", "royal blue", "grey30", "grey60", "darkblue"), name = " N flux \n and form", 
+                    labels = c(expression(~RF~NH[4]*-N), expression(~RF~NO[3]*-N), expression(~fog~NH[4]*-N), expression(~fog~NO[3]*-N), expression(~precipitation))) +
   geom_line(data = RF.m.vol, aes(x = month, y = value, group = "variable"), colour = "darkblue", size = 1.1, linetype = 3) + 
-  scale_fill_manual(values = c("royal blue", "Sky Blue","grey30", "grey60", "darkblue"), name = " N flux \n and form", labels = c(expression(~RF~NH[4]*-N), expression(~RF~NO[3]*-N), expression(~fog~NH[4]*-N), expression(~fog~NO[3]*-N), expression(~precipitation))) +
-  facet_grid(year ~ .) + ggtitle("Nitrogen deposition in \n rainfall and fog") +
+  facet_grid(year ~ .) + ggtitle("Nitrogen deposition in rainfall and fog") +
   theme(plot.title=element_text(face="bold", size = 16)) +
   labs( x = "month", y = expression(N~flux~~"(kg N"~~ha^"-1"~month^"-1"*")")) +
   theme(panel.border = element_blank(),
         plot.background = element_rect(fill = "transparent",colour = NA)) +
-  scale_y_continuous(sec.axis = sec_axis(~.*280, name = "monthly precipitation [mm]"))
+  scale_y_continuous(sec.axis = sec_axis(~.*280, name = "monthly precipitation (mm)"))
+
+# linea porchiddio: "darkblue", expression(~precipitation), non riesco ad avere i colori delle barre in pandan con le label cazzo!!!! 
+# legend pairs correctly colors and labels but data are not correctly paired with colors
 
 # Here for fine legends: http://stackoverflow.com/questions/18394391/r-custom-legend-for-multiple-layer-ggplot
 # risolve il mio ? sul fatto che davo un colore ma poi non usciva quel colore. Praticamente in aes si "mappa" il colore,
@@ -137,6 +142,24 @@ plot.RFfogTF = Wow + geom_bar(stat = "identity", position = "dodge") +
   theme(panel.border = element_blank(),
         plot.background = element_rect(fill = "transparent",colour = NA))
 
+# **************************************************************************************************
+
+# table 5: canopy effect -  Ndep (RF+fog) vs. TF+SF(comparison)
+
+# **************************************************************************************************
+N.inout <- long.N.RFTSW[long.N.RFTSW$variable %like% "input"| long.N.RFTSW$variable %like% "output",]
+N.inout = N.inout[N.inout$year>2011 & N.inout$year<2017,]
+
+#N.inout$variable <- factor(N.inout$variable, levels = c("NO3.N.RFfog", "NH4.N.RFfog", "NO3.N.TF", "NH4.N.TF"))
+Inout = ggplot(data = N.inout, aes (month, value, fill = variable))
+
+plot.inout = Inout + geom_bar(stat = "identity", position = "dodge") + 
+  scale_fill_manual(values = c("cadetblue4", "cadetblue2", "Dark Green", "Yellow Green"), name = " N flux \n and form", labels = c(expression(~fog+RF~NH[4]*-N), expression(~fog+RF~NO[3]*-N), expression(~TF~NH[4]*-N), expression(~TF~NO[3]*-N))) +
+  facet_grid(year ~ .) + ggtitle("Nitrogen deposition and n content in the under canopy fluxes") +
+  theme(plot.title=element_text(face="bold", size = 16)) +
+  labs( x = "Month", y = expression(N~flux~~"(kg N"~~ha^"-1"~month^"-1"*")")) +
+  theme(panel.border = element_blank(),
+        plot.background = element_rect(fill = "transparent",colour = NA))
 
 
 
@@ -176,59 +199,21 @@ plot.year.inout = a + geom_bar(stat = "identity", position = "dodge") +
   theme(panel.border = element_blank(),
         plot.background = element_rect(fill = "transparent",colour = NA))
 
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-  # PLOTTING the annual fluxes (DC) for Funds request
-  
-  x = ggplot(data = mNX.rfsftf, aes (mY, vals, fill = var))
+
+##############################################################################################
+# adapting the annual fluxes (DC) for Funds request to the new long data: note that this version contains too many colors and wrong labels. If
+# needed it needs to be corrected.
+
+x = ggplot(data = long.N.RFTSW, aes (month, value, fill = variable))
 
 plottone = x + geom_bar(stat = "identity", position = "dodge") + 
-  scale_fill_manual(values = c("royal blue", "Sky Blue", "Dark Green", "Yellow Green", "Saddle Brown", "Burlywood"), name = "N flux \n and form", labels = c(expression(RF~NH[4]*-N), expression(RF~NO[3]*-N), expression(TF~NH[4]*-N), expression(TF~NO[3]*-N), expression(SF~NH[4]*-N), expression(SF~NO[3]*-N))) +
-  labs( x = "YEAR", y = expression(N~flux~~"(kg N"~~ha^"-1"~y^"-1"*")")) 
+  scale_fill_manual(values = c("royal blue", "Sky Blue", "Dark Green", "Yellow Green", "Saddle Brown", "Burlywood", "grey20", "grey30", "grey40", "grey50", "grey60", "grey70"), name = "N flux \n and form", labels = c(expression(RF~NH[4]*-N), expression(RF~NO[3]*-N), expression(TF~NH[4]*-N), expression(TF~NO[3]*-N), expression(SF~NH[4]*-N), expression(SF~NO[3]*-N), expression(RF~NO[3]*-N), expression(RF~NO[3]*-N), expression(RF~NO[3]*-N), expression(RF~NO[3]*-N))) +
+  facet_grid(year ~ .)
+labs( x = "YEAR", y = expression(N~flux~~"(kg N"~~ha^"-1"~y^"-1"*")")) 
 
-ggsave("M:/My PhD/R/PhD-local_repo/output_tables_plots/N_fluxes_Griffin.png", width = 6, height = 4, dpi = 100, plottone)
+# + facet_grid(mY ~ ., scales = "free") #, breaks = "var", labels = c("RF NH4-N", "RF NO3-N","TF NH4-N", "TF NO3-N","SF NH4-N", "SF NO3-N")))
 
-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-  
+# aiutino per labels con subscripts e special fonts: * e' uno spazio non spazio (x es. per staccare un pedice dal testo successivo), ~ e' uno spazio fisico
+# plot(1,1, xlab=expression(N~flux~~"(kg N"~ha^"-1"~y^"-1"*")"))
 
-
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-LEO's filter on ggplot                                                                                      '
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-  headwater_isotopes = chem2 %>%
-  
-  filter(Catchment %in% c("EGS16", "EGS06", "EGS07", "EGS10", "EGS12", "EGW17")) %>%
-  
-  ggplot(., aes(x = d18O, y=dD, group=Catchment, colour=Catchment, shape = Catchment)) +
-  
-  geom_point() +
-  
-  xlab(expression({delta}^18*"O VSMOW2")) +
-  
-  ylab(expression({delta}^2*"H VSMOW2")) +
-  
-  geom_point(data = filter(river_isotope_summary, Catchment %in% c("EGS16", "EGS06", "EGS07", "EGS10", "EGS12", "EGW17")),
-             
-             aes(x = Mean_d18O, y = Mean_dD, group=Catchment)) +
-  
-  geom_errorbarh(data = filter(river_isotope_summary, Catchment %in% c("EGS16", "EGS06", "EGS07", "EGS10", "EGS12", "EGW17")), aes(xmin = Mean_d18O - sd_d18O,
-                                                                                                                                   
-                                                                                                                                   xmax = Mean_d18O + sd_d18O, y = Mean_dD, x = Mean_d18O, group=Catchment), height = .5) +
-  
-  geom_errorbar(data = filter(river_isotope_summary, Catchment %in% c("EGS16", "EGS06", "EGS07", "EGS10", "EGS12", "EGW17")), aes(ymin = Mean_dD - sd_dD,
-                                                                                                                                  
-                                                                                                                                  ymax = Mean_dD + sd_dD, x = Mean_d18O, y = Mean_dD, group=Catchment), width = .01) +
-  
-  stat_function(fun=function(x)8*x+10, geom="line", colour="Black") +
-  
-  stat_function(fun=function(x)7.7*x+6.7, geom="line", colour="Black", linetype=3) +
-  
-  annotate("text", -8.5, -57.3, label = "GMWL", size=4) +
-  
-  annotate("text", -8.4, -60.0, label = "LMWL", size=4) +
-  
-  ggtitle("Headwater isotopes Dec 2014 - Jan 2016 raw data") +
-  
-  theme(plot.title = element_text(family = "Arial", face="bold", size=12, hjust=0.5))
-
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 

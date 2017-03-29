@@ -11,7 +11,8 @@ rm(list=ls())
 ### set working dir for pc:
 #setwd("C:/Users/Daniele Ferraretto/Documents/PhD-local_repo")
 ### setwd per desktop
-setwd("M:/My PhD/R/PhD-local_repo")
+#setwd("M:/My PhD/R/PhD-local_repo")
+setwd("C:/Users/s1373890/Daniele_Repo")
 
 # --------------------------------------------------------
 # Connect to SQL db
@@ -98,32 +99,6 @@ rm(monthlyNH4.RF, monthlyNH4.fog, monthlyNH4.SF, monthlyNH4.TF, monthlyNO3.fog, 
    monthlyNO3.SF, mNH4fog, mNH4RF, mNH4SF, mNH4TF, mNO3fog, mNO3RF, mNO3SF, mNO3TF, monthlyCSW.NH4, monthlyCSW.NO3, monthlyTSW.NH4, monthlyTSW.NO3)
 
 
-#
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-# PLOTTING the annual fluxes (DC) for Funds request
 
-x = ggplot(data = mNX.rfsftf, aes (mY, vals, fill = var))
-
-plottone = x + geom_bar(stat = "identity", position = "dodge") + 
-  scale_fill_manual(values = c("royal blue", "Sky Blue", "Dark Green", "Yellow Green", "Saddle Brown", "Burlywood"), name = "N flux \n and form", labels = c(expression(RF~NH[4]*-N), expression(RF~NO[3]*-N), expression(TF~NH[4]*-N), expression(TF~NO[3]*-N), expression(SF~NH[4]*-N), expression(SF~NO[3]*-N))) +
-  labs( x = "YEAR", y = expression(N~flux~~"(kg N"~~ha^"-1"~y^"-1"*")")) 
-
-ggsave("M:/My PhD/R/PhD-local_repo/output_tables_plots/N_fluxes_Griffin.png", width = 6, height = 4, dpi = 100, plottone)
-
-ggsave(filename, plot = last_plot(), device = NULL, path = NULL, scale = 1, width = NA, height = NA, units = c("in", "cm", "mm"), dpi = 300, limitsize = TRUE, ...)
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-  # adapting the annual fluxes (DC) for Funds request to the new long data
-  
-  x = ggplot(data = long.N.RFTSW, aes (month, value, fill = variable))
-
-plottone = x + geom_bar(stat = "identity", position = "dodge") + 
-  scale_fill_manual(values = c("royal blue", "Sky Blue", "Dark Green", "Yellow Green", "Saddle Brown", "Burlywood", "grey20", "grey30", "grey40", "grey50", "grey60", "grey70"), name = "N flux \n and form", labels = c(expression(RF~NH[4]*-N), expression(RF~NO[3]*-N), expression(TF~NH[4]*-N), expression(TF~NO[3]*-N), expression(SF~NH[4]*-N), expression(SF~NO[3]*-N), expression(RF~NO[3]*-N), expression(RF~NO[3]*-N), expression(RF~NO[3]*-N), expression(RF~NO[3]*-N))) +
-  facet_grid(year ~ .)
-  labs( x = "YEAR", y = expression(N~flux~~"(kg N"~~ha^"-1"~y^"-1"*")")) 
-
- # + facet_grid(mY ~ ., scales = "free") #, breaks = "var", labels = c("RF NH4-N", "RF NO3-N","TF NH4-N", "TF NO3-N","SF NH4-N", "SF NO3-N")))
-
-# aiutino per labels con subscripts e special fonts: * e' uno spazio non spazio (x es. per staccare un pedice dal testo successivo), ~ e' uno spazio fisico
-# plot(1,1, xlab=expression(N~flux~~"(kg N"~ha^"-1"~y^"-1"*")"))
 
 
