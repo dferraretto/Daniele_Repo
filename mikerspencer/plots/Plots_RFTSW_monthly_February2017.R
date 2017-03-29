@@ -49,21 +49,30 @@ RF.m.vol$value = RF.m.vol$value/280 # 280 is the result of the ration maximum mo
 # Ninput <- long.N.RFTSW[long.N.RFTSW$variable %like% "N.RF"| long.N.RFTSW$variable %like% "N.fog",]
 N.input <- long.N.RFTSW[long.N.RFTSW$variable %in% "NH4.N.RF" | long.N.RFTSW$variable %in% "NO3.N.RF"| long.N.RFTSW$variable %in% "NH4.N.fog"| long.N.RFTSW$variable %in% "NO3.N.fog",]
 
+N.input$variable= factor(N.input$variable, levels = c("NH4.N.RF", "NO3.N.RF", "NH4.N.fog", "NO3.N.fog")) # orders my factors not to mess with bar colors
+
+N.input=droplevels(N.input)
 x = ggplot(data = N.input, aes (month, value, fill = variable))
 
-plot.RFfog = x + geom_bar(stat = "identity", position = "dodge") + 
-  scale_fill_manual(values = c("Sky Blue", "royal blue", "grey30", "grey60", "darkblue"), name = " N flux \n and form", 
-                    labels = c(expression(~RF~NH[4]*-N), expression(~RF~NO[3]*-N), expression(~fog~NH[4]*-N), expression(~fog~NO[3]*-N), expression(~precipitation))) +
-  geom_line(data = RF.m.vol, aes(x = month, y = value, group = "variable"), colour = "darkblue", size = 1.1, linetype = 3) + 
-  facet_grid(year ~ .) + ggtitle("Nitrogen deposition in rainfall and fog") +
-  theme(plot.title=element_text(face="bold", size = 16)) +
-  labs( x = "month", y = expression(N~flux~~"(kg N"~~ha^"-1"~month^"-1"*")")) +
-  theme(panel.border = element_blank(),
-        plot.background = element_rect(fill = "transparent",colour = NA)) +
-  scale_y_continuous(sec.axis = sec_axis(~.*280, name = "monthly precipitation (mm)"))
+orange.bold.italic.text <- element_text(face = "bold.italic", color = "blue", size = 16)
 
-# linea porchiddio: "darkblue", expression(~precipitation), non riesco ad avere i colori delle barre in pandan con le label cazzo!!!! 
-# legend pairs correctly colors and labels but data are not correctly paired with colors
+(plot.RFfog = x + geom_bar(stat = "identity", position = "dodge") + 
+    scale_fill_manual(values = c('NH4.N.RF'="Sky Blue", 'NO3.N.RF' = "royal blue",
+                                 'NH4.N.fog' = "grey60", 'NO3.N.fog'="grey30", 'xprec'="orange"), 
+                      breaks = c('NH4.N.RF', 'NO3.N.RF', 'NH4.N.fog', 'NO3.N.fog', 'xprec'), 
+                      name = " N flux \n and form", 
+                      labels = c(expression(~RF~NH[4]*-N), expression(~RF~NO[3]*-N), 
+                                 expression(~fog~NH[4]*-N), expression(~fog~NO[3]*-N), 
+                                 expression(~precipitation))) +
+    facet_grid(year ~ .) + ggtitle("Nitrogen deposition in rainfall and fog") +
+    theme(plot.title=element_text(face="bold", size = 16)) +
+    labs( x = "month", y = expression(N~flux~~"(kg N"~~ha^"-1"~month^"-1"*")")) +
+    theme(panel.border = element_blank(),
+          plot.background = element_rect(fill = "transparent",colour = NA)) +
+    scale_y_continuous(sec.axis = sec_axis(~.*280, name = "monthly precipitation (mm)")) +
+    geom_line(data = RF.m.vol, aes(x = month, y = value, group = "variable"), 
+              colour = "orange", size = 1.1, linetype = 3) + 
+    theme(axis.text.y.right = orange.bold.italic.text))
 
 # Here for fine legends: http://stackoverflow.com/questions/18394391/r-custom-legend-for-multiple-layer-ggplot
 # risolve il mio ? sul fatto che davo un colore ma poi non usciva quel colore. Praticamente in aes si "mappa" il colore,
