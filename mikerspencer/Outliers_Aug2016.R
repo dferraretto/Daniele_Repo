@@ -1,7 +1,7 @@
 #
 #
 #####            OUTLIERS            ##########
-
++++++++++   Last check: 31/03/2017  +++++++++++
 # see: https://www.r-bloggers.com/identify-describe-plot-and-remove-the-outliers-from-the-dataset/
 
 # Outlier removal by the Tukey rules on quartiles +/- 1.5 IQR
@@ -48,7 +48,7 @@ outlierKD <- function(dt, var) {
 }
 
 
-setwd("M:/My PhD/R/PhD-local_repo")
+setwd("C:/Users/s1373890/Daniele_Repo")
 
 # on 25/11/2016 I got this weird "Error in plot.new() : figure margins too large". To solve it check:
 par("mar") # if the result was 5.1 4.1 4.1 2.1 then:
@@ -65,6 +65,8 @@ throughvol = dbGetQuery(db, "SELECT * FROM fielddata WHERE variable = 'through v
 
 outlierKD(throughvol, vals)
 
+#3 outliers, but acceptable, as the highest is a rare TF OF
+
 #------------------------------
 
 stemvol = dbGetQuery(db, "SELECT * FROM fielddata WHERE variable = 'stem vol' ORDER BY date")
@@ -79,7 +81,7 @@ bigSF = c( "C10S1", "C10S3", "C11S6","C11S7", "C12S1", "C12S2", "C12S3")
 hugeSF <-stemvol[which(stemvol$sample %in% bigSF),]
 outlierKD(hugeSF, vals)
 
-# sF and TF DO NOT HAVE OUTLIERS!
+# sF DOes NOT HAVE OUTLIERS!
 
 #------------------------------
 
@@ -92,12 +94,15 @@ fog.outl =  rainfall[which(rainfall$sample %in% fog),]
 outlierKD(RF.outl, vals)
 outlierKD(fog.outl, vals)
 
+#  2 outliers: C30D2 on 2011-12-01 and C31D1 on 2011-12-15, removed from here
 
 #------------------------------
 
 throughdepth = dbGetQuery(db, "SELECT * FROM fielddata WHERE variable = 'through depth' ORDER BY date")
 
 outlierKD(throughdepth, vals)
+
+# outliers: 3, accepted: NONE
 
 #############################################################################
 # ----------------------------   LAB data   ---------------------------------
@@ -132,6 +137,9 @@ TFNH4 = TFNH4[order(-TFNH4[,5]), ]
 potentialOUTLIERS = head(TFNH4, n=128)
 potentialOUTLIERS = potentialOUTLIERS[order(potentialOUTLIERS  [,1]), ] 
 # removed 5 TFNH4 rows: stitching to the function yet EXCLUDING the date 24/07/2014: 4 vals in T plot are around 4 mg/l!! 
+# 31/03/2017: I am not happy with what I have previously done: looking at the outliers distribution and thinking of what they represent,
+# furthermore taking into account that apart of the highest value the following two are found on the same sample at one year of distance, I would check
+# in case there were poops on the collectors before rejecting them.
 
 
 # lab stemflows
@@ -142,7 +150,7 @@ SFNO3<-labNO3[which(labNO3$sample %in% stemflow),]
 SFNH4<-labNH4[which(labNH4$sample %in% stemflow),]
 
 outlierKD(SFNO3, vals)
-# outliers identified on 25/11/2016: 180!!! 
+# outliers identified on 31/03/2017: 186
 # select potential outliers row and decide:
 SFNO3 = SFNO3[order(-SFNO3[,5]), ]
 potentialOUTLIERS = head(SFNO3, n=128)
@@ -171,10 +179,10 @@ potentialOUTLIERS = head(RFNO3, n=8)
 potentialOUTLIERS = potentialOUTLIERS[order(potentialOUTLIERS  [,1]), ] # nessuno accettato!
 
 outlierKD(RFNH4, vals)
-# outliers identified on 25/11/2016: 8 
+# outliers identified on 31/03/2017: 9 
 # select potential outliers row and decide:
 RFNH4 = RFNH4[order(-RFNH4[,5]), ]
-potentialOUTLIERS = head(RFNH4, n=8)
+potentialOUTLIERS = head(RFNH4, n=9)
 potentialOUTLIERS = potentialOUTLIERS[order(potentialOUTLIERS  [,1]), ] # 3/8 accepted (C31D1 on 2013-10-03, 2015-06-07, 2015-07-21)
 
 outlierKD(fogNO3, vals)
