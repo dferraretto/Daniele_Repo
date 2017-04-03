@@ -16,7 +16,7 @@ library(reshape2)
 ### set working dir for pc:
 #setwd("C:/Users/Daniele Ferraretto/Documents/PhD-local_repo")
 ### setwd per desktop
-setwd("M:/My PhD/R/PhD-local_repo")
+setwd("C:/Users/s1373890/Daniele_Repo")
 ############################################################################
 #
 #                              FIELDDATA
@@ -59,10 +59,10 @@ wide.RFfog <- dcast(fog.C30D1, date ~ sample, value.var="vals") # ready to selec
 ########              1 . C30D2 ~ C30D1, cleared of OF + QC + (D2-D1<0)
 
 # elimino i fog<RF to be ready for lm:
-wide.RFfog.cleaned$diff= wide.RFfog.cleaned$C30D2 - wide.RFfog.cleaned$C30D1 # this checks if there were any (fog vol < RF) left
+wide.RFfog.cleaned$diff= wide.RFfog.cleaned$C30D2 - wide.RFfog.cleaned$C30D1 # this checks if there were any (fog vol < RF) left - 5 on 04/03/17
 wide.RFfog.lm <- wide.RFfog.cleaned[(wide.RFfog.cleaned$diff>"0"), ]
 
-# extracting (the first 3) negative values to be predicted
+# extracting negative values to be predicted
 wide.fog.neg = wide.RFfog.cleaned[(wide.RFfog.cleaned$diff<"0"), ]
 wide.fog.neg = na.omit(wide.fog.neg) 
 
@@ -70,7 +70,7 @@ wide.fog.neg = na.omit(wide.fog.neg)
 
 RFfog.lm = lm( C30D2 ~  C30D1, data = wide.RFfog.lm)
 
-summary(RFfog.lm)$r.squared # reactivate when rerunning this script with new data - R squared on November 2016 = 0.8101, on 6/12: 0.7962. mah.
+summary(RFfog.lm)$r.squared # reactivate when rerunning this script with new data - R squared on November 2016 = 0.8101, on 03/04/17: 0.7931. mah.
 summary(RFfog.lm) #  p on November 2016 = ***, cioe' OVER THE TOP
 
 
@@ -81,13 +81,15 @@ summary(RFfog.lm) #  p on November 2016 = ***, cioe' OVER THE TOP
 fog.all = dbGetQuery(db, "SELECT date, sample, vals, overflowing, QC, comments FROM fielddata WHERE sample = 'C30D2' ORDER BY date")
 
 # selecting OF and QC to be predicted
-fog.not =  fog.all[ which(fog.all$overflowing =='1' | fog.all$QC =='1'), ]
+# fog.not =  fog.all[ which(fog.all$overflowing =='1' | fog.all$QC =='1'), ] # this line aimed to rebuild also OF or QC "1" codes. I don't see it fitting though.
 
 # selecting vector dates from OF, QC & neg values (wide.fog.neg)
-fog.not = fog.not[, "date"]
-wide.fog.neg = wide.fog.neg[ , "date"]
+# fog.not = fog.not[, "date"] # on 04/03/17 I don't understand why I had previously added these lines. wide.fog.neg has all cases I need, I believe
+# Otherwise I find myself with lines/dates where fog > C30D1 where the regression has no sense.
+
+prediction.dates = wide.fog.neg[ , "date"]
 # new try (1/12): di prediction dates prendo solo quelle in cui C30D1>C30D2
-prediction.dates = c(fog.not, wide.fog.neg) # one vector from OF+QC & "negatives" vector
+# prediction.dates = c(fog.not, wide.fog.neg) # one vector from OF+QC & "negatives" vector
 prediction.dates = unique(prediction.dates) # this removes duplicates, if any (not at November 2016)
 
 # extracting C30D1 values to be used to predict fog values
@@ -111,13 +113,14 @@ predicted.fog.int = as.data.frame(predict(RFfog.lm, newdata, interval="confidenc
 
 predicted.fog = cbind( TBP, predicted.fog.int) # add the predicted figures to the TBP db
 
-# Some of the calculated values are lower than the real values! To be rejected:
+# None of the calculated values are lower than the real values! Anyway, good to check how lwr-calc-upr vals fit the substitution
 predicted.fog$checkfit =  predicted.fog$fit- predicted.fog$C30D1
 predicted.fog$checklwr = predicted.fog$lwr- predicted.fog$C30D1
-predicted.fog$checkrealval = predicted.fog$C30D2- predicted.fog$C30D1
+# predicted.fog$checkrealval = predicted.fog$C30D2- predicted.fog$C30D1 # ma son le differenze che avevo gia' calcolato proprio per scegliere ste righe, mah...
 
 # adjust 07/2016 by picking the upr value
-#predicted.fog[["44","fit"]] = predicted.fog[["44","upr"]] # 6/12/16: all lwr
+#predicted.fog[["44","fit"]] = predicted.fog[["44","upr"]] 
+# 04/03/17: ALL LWR
 
 
 rm(fog.C30D1, fog.C30D1.semicleaned, fog.C30D1.cleaned, newdata, predicted.fog.int, TBP, 
@@ -163,9 +166,9 @@ fog.C30D1 = dbGetQuery(db, "SELECT date, sample, variable, vals FROM labdata WHE
 # Remove all rows where OF = 1: 
 #http://stackoverflow.com/questions/8005154/conditionally-remove-dataframe-rows-with-r
 
-fog.C30D1.cleaned <- fog.C30D1[!(fog.C30D1$variable=="acidity"), ]
-fog.C30D1.NO3 <- fog.C30D1[fog.C30D1$variable=="NO3.N", ]
-fog.C30D1.NH4 <- fog.C30D1[fog.C30D1$variable=="NH4.N", ]
+fog.C30D1.cleaned <- fog.C30D1[!(fog.C30D1$variable =="acidity"), ]
+fog.C30D1.NO3 <- fog.C30D1[fog.C30D1$variable =="NO3.N", ]
+fog.C30D1.NH4 <- fog.C30D1[fog.C30D1$variable =="NH4.N", ]
 
 
 ## Long to wide (http://www.cookbook-r.com/Manipulating_data/Converting_data_between_wide_and_long_format/)
@@ -216,6 +219,11 @@ predictedNO3.fog = cbind(predictNO3, predictedNO3.fog.int) # add the predicted f
 
 # Check if lwr value is enough to make differences to turn positive:
 predictedNO3.fog$check =  predictedNO3.fog$lwr- predictedNO3.fog$C30D1
+#NOTE: if the difference between fog and C30 prec is >0.1 I am not adjusting those slight differences that might depend on
+# (lab/minimal contaminations) systematic errors. They need to be verified, or I would create a false input peak.
+# 17/12/2015: C30D1>>C31D1>C30D2. I will substitute C30D1 with C31D1 and then proceed to calculate the new fit value.
+# 2014-08-21: C30D1>>C31D1>C30D2. However, I will not push this substitution thing, as the difference C31-C30 is reasonable compared to the historical 
+# 24/07/2014: 
 # adjust 17/12/2015 by picking the fit value
 predictedNO3.fog[["51","lwr"]] = predictedNO3.fog[["51","fit"]]
 # Prepare the dataframe for the substitution
@@ -237,10 +245,9 @@ wide.prNH4.lm <- na.omit(wide.prec.NH4[wide.prec.NH4$diff>"0", ])
 predictNH4 =  na.omit(wide.prec.NH4[wide.prec.NH4$diff<"0", ])
 
 
-
 RFfog.lm = lm( C30D2 ~  C30D1, data = wide.prNH4.lm)
 
-summary(RFfog.lm)$r.squared # reactivate when rerunning this script with new data - R squared on November 2016 = 0.8331646, better than fielddata :)
+summary(RFfog.lm)$r.squared # reactivate when rerunning this script with new data - R squared on April 2017 = 0.8117, always very good
 
 summary(RFfog.lm) #  p on November 2016 = ***, cioe' OVER THE TOP
 
@@ -293,3 +300,5 @@ dbDisconnect(db)
 
 rm(db, labdata, predicted.fog, predictedNH4.fog, predictedNO3.fog, w)
 
+# NOTE on 04/03/2017: I gave up on the cautionary substitution of C30D1 high values with lower values from C31D1. It must be remembered, though, that 
+# this way the high value of C30D1.N reflects twice on the N.input values as it pumps up also the fog.N value.

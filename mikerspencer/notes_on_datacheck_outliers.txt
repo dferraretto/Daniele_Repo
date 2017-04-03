@@ -3,25 +3,41 @@ There are F in comments to turn into 1 code for OF, in case I hadn't done previo
 For TF depths> 140 almost all TF are OF.
 SF: except the space result/top outlier, most of the following numbers come from close-to-0 volumes (i.e. C11S2, il mortimpiedi). 
 SFNO3: Hence I am tempted not to delete anything except the first value
-SFNH4: same here, except the >10 values are really unwatchable, I would go for deleting those (7 values):3885
-2014-07-24
-T10S2
-NH4.N
-2014-06-20
-T12S2
-NH4.N
-2015-02-23
-T10S1
-NH4.N
-2013-07-28
-T10S2
-NH4.N
-2013-08-22
-C10S1
-NH4.N
-2015-02-23
-T10S2
-NH4.N
-2012-04-26
-T10S2
-NH4.N
+SFNH4: same here, except the >10 values are really unwatchable, I would go for deleting those (7 values).
+
+OUTLIERS REMOVED THROUGH OUTLIERS.Aug2016:
+2011-12-01 C30D2 (field)
+2011-12-15 C31D1 (field)
+
+Outliers to be removed through a script:
+
+2014-07-24 T10S2 NH4.N
+2014-06-20 T12S2 NH4.N
+2015-02-23 T10S1 NH4.N
+2013-07-28 T10S2 NH4.N
+2013-08-22 C10S1 NH4.N
+2015-02-23 T10S2 NH4.N
+2012-04-26 T10S2 NH4.N
+
+LAB:
+
+# 2015-10-19 T11T2 NO3.N
+
+# 2013-08-22 T11T2 NH4.N
+# 2015-04-21 T12T1 NH4.N
+# 2014-04-24 T12T1 NH4.N
+
+# 2014-07-24 T10S2 NO3.N
+
+# 2014-07-24 T10S2 NH4.N
+# 2014-06-20 T12S2 NH4.N
+# 2015-02-23 T10S1 NH4.N
+# 2013-07-28 T10S2 NH4.N
+# 2013-08-22 C10S1 NH4.N
+# 2015-02-23 T10S2 NH4.N
+# 2012-04-26 T10S2 NH4.N
+
+# 2015-06-17 C31D1 NH4.N
+# 2015-07-21 C31D1 NH4.N
+# 2013-10-03 C31D1 NH4.N
+

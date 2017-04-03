@@ -16,7 +16,7 @@ rm(list=ls())
 ### set working dir for pc:
 setwd("C:/Users/Daniele Ferraretto/Documents/PhD-local_repo")
 ### setwd 4 desktop
-setwd("M:/My PhD/R/PhD-local_repo")
+setwd("C:/Users/s1373890/Daniele_Repo")
 
 # source the scripts
 source("repo/Create_db.R")
