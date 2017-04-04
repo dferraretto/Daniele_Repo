@@ -36,13 +36,13 @@ library(extrafont)
 
 # Precipitation - preparing the df RF.m.vol
 
-RF.m.vol = transform(RF.m.vol, mY = as.yearmon(as.character(mY), "%Y%m"))
-RF.m.vol$month = format(RF.m.vol$mY, "%m")
-RF.m.vol$year = format(RF.m.vol$mY, "%Y")
-colnames(RF.m.vol)[2] = "value"
-RF.m.vol$variable = "xprec"
-RF.m.vol = RF.m.vol[RF.m.vol$year<2017&RF.m.vol$year>2011,]
-RF.m.vol$value = RF.m.vol$value/280 # 280 is the result of the ration maximum monthly prec depth/max main y axis value (~0.6):
+RF.m.depth = transform(RF.m.vol, mY = as.yearmon(as.character(mY), "%Y%m"))
+RF.m.depth$month = format(RF.m.depth$mY, "%m")
+RF.m.depth$year = format(RF.m.depth$mY, "%Y")
+colnames(RF.m.depth)[2] = "value"
+RF.m.depth$variable = "xprec"
+RF.m.depth = RF.m.depth[RF.m.depth$year<2017&RF.m.depth$year>2011,]
+RF.m.depth$value = RF.m.depth$value/280 # 280 is the result of the ration maximum monthly prec depth/max main y axis value (~0.6):
 # when a second axis is used (see below, scale_y_continuous), then the same value is used to turn the secondary scale into the originary values
 
 
@@ -58,27 +58,29 @@ N.input=droplevels(N.input)
 
 x = ggplot(data = N.input, aes (month, value, fill = variable))
 
-orange.bold.text <- element_text(face = "bold", color = "orange") # per bold AND italic: bold.italic
+#orange.bold.text <- element_text(face = "bold", color = "orange") # per bold AND italic: bold.italic
+#orange.text <- element_text(face = "plain", color = "orange")
+Edired.text <- element_text(face = "plain", color = "#DF0057")
 
 plot.RFfog = x + geom_bar(stat = "identity", position = "dodge") + 
     scale_fill_manual(values = c('NH4.N.RF'="Sky Blue", 'NO3.N.RF' = "royal blue",
-                                 'NH4.N.fog' = "grey60", 'NO3.N.fog'="grey30", 'xprec'="orange"), 
+                                 'NH4.N.fog' = "grey60", 'NO3.N.fog'="grey30", 'xprec'="#DF0057"), 
                       breaks = c('NH4.N.RF', 'NO3.N.RF', 'NH4.N.fog', 'NO3.N.fog', 'xprec'), 
                       name = " N flux \n and form", 
                       labels = c(expression(~RF~NH[4]*-N), expression(~RF~NO[3]*-N), 
                                  expression(~fog~NH[4]*-N), expression(~fog~NO[3]*-N), 
                                  expression(~precipitation))) +
-    facet_grid(year ~ .) + ggtitle("Nitrogen deposition in rainfall and fog compared to monthly precipitation") +
+    facet_grid(year ~ .) + ggtitle("Nitrogen deposition in rainfall and fog\n compared to monthly precipitation") +
     theme(plot.title=element_text(face="bold", size = 16)) +
     labs( x = "month", y = expression(N~flux~~"(kg N"~~ha^"-1"~month^"-1"*")")) +
     theme(panel.border = element_blank(),
           plot.background = element_rect(fill = "transparent",colour = NA)) +
     scale_y_continuous(sec.axis = sec_axis(~.*280, name = "monthly precipitation (mm)")) +
-    geom_line(data = RF.m.vol, aes(x = month, y = value, group = "variable"), 
-              colour = "orange", size = 0.5, linetype = 1) +
-  geom_point(data = RF.m.vol, aes(x = month, y = value, group = "variable"), 
-            colour = "orange", size = 2, show.legend = FALSE) + theme_bw() +
-    theme(axis.text.y.right = orange.bold.text, axis.title.y.right = orange.bold.text, plot.title = element_text(hjust = 0.5))
+    geom_line(data = RF.m.depth, aes(x = month, y = value, group = "variable"), 
+              colour = "#DF0057", size = 0.5, linetype = 2) +
+  geom_point(data = RF.m.depth, aes(x = month, y = value, group = "variable"), 
+            colour = "#DF0057", size = 1.5, show.legend = FALSE) + theme_bw(base_size = 14) +
+    theme(axis.text.y.right = Edired.text, axis.title.y.right = Edired.text, plot.title = element_text(hjust = 0.5, size = 20, colour = '#DF0057'))
 
 
 
@@ -87,9 +89,6 @@ plot.RFfog = x + geom_bar(stat = "identity", position = "dodge") +
 # ma poi va dato in scale_fill_identity o scale_colour_manual o li mortacci sua. Questo per separare N flux and form da precipitation
 # e dare a precipitation in legenda forma di linea. to be updated, last update: 09/02/2017
   
-
-prec <- ggplot(RF.m.vol, aes(month, value)) + 
-  geom_line(colour = "dodgerblue3", group = "variable") +  
 # **************************************************************************************************
 
 # table 2: undercanopy fluxes TF+SF vs. TF depth
@@ -98,14 +97,14 @@ prec <- ggplot(RF.m.vol, aes(month, value)) +
 
   # Throughfall - preparing the df TF.m.vol
   
-tf.m.vol = transform(tf.m.vol, mY = as.yearmon(as.character(mY), "%Y%m"))
+TF.m.depth = transform(tf.m.vol, mY = as.yearmon(as.character(mY), "%Y%m"))
 
-tf.m.vol$month = format(tf.m.vol$mY, "%m")
-tf.m.vol$year = format(tf.m.vol$mY, "%Y")
-colnames(tf.m.vol)[2] = "value"
-tf.m.vol$variable = "TF.depth"
-tf.m.vol = tf.m.vol[tf.m.vol$year<2017&tf.m.vol$year>2011,]
-tf.m.vol$value = tf.m.vol$value/(177*2) # 177 maximum monthly TF depth depth, 0.5 the max value on the y axis, to fit TF data into the TF/SF plot:
+TF.m.depth$month = format(TF.m.depth$mY, "%m")
+TF.m.depth$year = format(TF.m.depth$mY, "%Y")
+colnames(TF.m.depth)[2] = "value"
+TF.m.depth$variable = "TF.depth"
+TF.m.depth = TF.m.depth[TF.m.depth$year<2017&TF.m.depth$year>2011,]
+TF.m.depth$value = TF.m.depth$value/(177*2) # 177 maximum monthly TF depth depth, 0.5 the max value on the y axis, to fit TF data into the TF/SF plot:
 # when a second axis is used (see below, scale_y_continuous), then the same value is used to turn the secondary scale into the originary values
 
   
@@ -114,27 +113,49 @@ tf.m.vol$value = tf.m.vol$value/(177*2) # 177 maximum monthly TF depth depth, 0.
 
 w = ggplot(data = N.TFSF, aes (month, value, fill = variable))
 
-mediumorchid4.bold.text <- element_text(face = "bold", color = "mediumorchid4") # per bold AND italic: bold.italic
+# Edired.bold.text <- element_text(face = "bold", color = "#DF0057") # per bold AND italic: bold.italic
 
 plot.TFSF = w + geom_bar(stat = "identity", position = "dodge") + 
   scale_fill_manual(values = c('NH4.N.TF'="Dark Green", 'NO3.N.TF' = "Yellow Green",
-                               'NH4.N.SF' = "Saddle Brown", 'NO3.N.SF'="Burlywood", 'TF.depth'="mediumorchid4"), 
+                               'NH4.N.SF' = "Saddle Brown", 'NO3.N.SF'="Burlywood", 'TF.depth'="#DF0057"), 
                     breaks = c('NH4.N.TF', 'NO3.N.TF', 'NH4.N.SF', 'NO3.N.SF', 'TF.depth'), 
                     name = "N flux \n and form", 
                     labels = c(expression(~TF~NH[4]*-N), expression(~TF~NO[3]*-N), 
                                expression(~SF~NH[4]*-N), expression(~SF~NO[3]*-N), 
                                expression(~TF~depth))) +
-  facet_grid(year ~ .) + ggtitle("Nitrogen deposition in throughfall and stemflow compared to monthly throughfall depth") +
+  facet_grid(year ~ .) + ggtitle("Nitrogen deposition in throughfall (TF) and stemflow (SF)\n compared to monthly throughfall depth") +
   theme(plot.title=element_text(face="bold", size = 16)) +
   labs( x = "month", y = expression(N~flux~~"(kg N"~~ha^"-1"~month^"-1"*")")) +
   theme(panel.border = element_blank(),
         plot.background = element_rect(fill = "transparent",colour = NA)) +
-  scale_y_continuous(sec.axis = sec_axis(~.*280, name = "monthly TF depth (mm)")) +
-  geom_line(data = tf.m.vol, aes(x = month, y = value, group = "variable"), 
-            colour = "mediumorchid4", size = 0.5, linetype = 1) +
-  geom_point(data = tf.m.vol, aes(x = month, y = value, group = "variable"), 
-             colour = "mediumorchid4", size = 2, show.legend = FALSE) + theme_bw() +
-  theme(axis.text.y.right = mediumorchid4.bold.text, axis.title.y.right = mediumorchid4.bold.text, plot.title = element_text(hjust = 0.5))
+  scale_y_continuous(sec.axis = sec_axis(~.*280, name = "monthly throughfall depth (mm)")) +
+  
+  geom_line(data = TF.m.depth, aes(x = month, y = value, group = "variable"), 
+            colour = "#DF0057", size = 0.5, linetype = 2) +
+  
+  geom_point(data = TF.m.depth, aes(x = month, y = value, group = "variable"), 
+             colour = "#DF0057", size = 1.5, show.legend = FALSE) + theme_bw(base_size = 14) +
+  theme(axis.text.y.right = Edired.text, axis.title.y.right = Edired.text, plot.title = element_text(hjust = 0.5, size = 20, colour = '#DF0057'))
+
+
+
+# **************************************************************************************************
+
+# table 5: canopy effect -  Ndep (RF+fog) vs. TF+SF(comparison)
+
+# **************************************************************************************************
+N.inout <- long.N.RFTSW[long.N.RFTSW$variable %like% "input"| long.N.RFTSW$variable %like% "output",]
+N.inout = N.inout[N.inout$year>2011 & N.inout$year<2017,]
+
+#N.inout$variable <- factor(N.inout$variable, levels = c("NO3.N.RFfog", "NH4.N.RFfog", "NO3.N.TF", "NH4.N.TF"))
+Inout = ggplot(data = N.inout, aes (month, value, fill = variable))
+
+plot.inout = Inout + geom_bar(stat = "identity", position = "dodge") + 
+  scale_fill_manual(values = c("cadetblue4", "cadetblue2", "Dark Green", "Yellow Green"), name = " N flux \n and form", labels = c(expression(~fog+RF~NH[4]*-N), expression(~fog+RF~NO[3]*-N), expression(~TF+SF~NH[4]*-N), expression(~TF+SF~NO[3]*-N))) +
+  facet_grid(year ~ .) + ggtitle("Nitrogen deposition and N content under the canopy") +
+  labs( x = "Month", y = expression(N~flux~~"(kg N"~~ha^"-1"~month^"-1"*")")) + theme_bw(base_size = 14)+
+  theme(panel.border = element_blank(), plot.background = element_rect(fill = "transparent",colour = NA), 
+  plot.title = element_text(hjust = 0.5, size = 20, colour = '#DF0057')) 
 
 
 # **************************************************************************************************
@@ -190,31 +211,10 @@ plot.RFfogTF = Wow + geom_bar(stat = "identity", position = "dodge") +
   theme(panel.border = element_blank(),
         plot.background = element_rect(fill = "transparent",colour = NA))
 
-# **************************************************************************************************
-
-# table 5: canopy effect -  Ndep (RF+fog) vs. TF+SF(comparison)
-
-# **************************************************************************************************
-N.inout <- long.N.RFTSW[long.N.RFTSW$variable %like% "input"| long.N.RFTSW$variable %like% "output",]
-N.inout = N.inout[N.inout$year>2011 & N.inout$year<2017,]
-
-#N.inout$variable <- factor(N.inout$variable, levels = c("NO3.N.RFfog", "NH4.N.RFfog", "NO3.N.TF", "NH4.N.TF"))
-Inout = ggplot(data = N.inout, aes (month, value, fill = variable))
-
-plot.inout = Inout + geom_bar(stat = "identity", position = "dodge") + 
-  scale_fill_manual(values = c("cadetblue4", "cadetblue2", "Dark Green", "Yellow Green"), name = " N flux \n and form", labels = c(expression(~fog+RF~NH[4]*-N), expression(~fog+RF~NO[3]*-N), expression(~TF+SF~NH[4]*-N), expression(~TF+SF~NO[3]*-N))) +
-  facet_grid(year ~ .) + ggtitle("Nitrogen deposition and N content under the canopy") +
-  theme(plot.title=element_text(face="bold", size = 16)) +
-  labs( x = "Month", y = expression(N~flux~~"(kg N"~~ha^"-1"~month^"-1"*")")) + theme_bw()+
-  theme(panel.border = element_blank(), plot.background = element_rect(fill = "transparent",colour = NA), 
-  plot.title = element_text(hjust = 0.5)) 
-
-
-
 ### MULTIPLOT FOR POSTER
 #install.packages("Rmisc")
 library(Rmisc)
-multiplot(plot.RFfog,plot.RFTF,plot.TFSF,plot.RFfogTF, cols = 2)
+multiplot(plot.RFfog,plot.inout, plot.TFSF, cols = 2)
 
 
 # **************************************************************************************************
@@ -248,20 +248,20 @@ plot.year.inout = a + geom_bar(stat = "identity", position = "dodge") +
         plot.background = element_rect(fill = "transparent",colour = NA))
 
 
-##############################################################################################
-# adapting the annual fluxes (DC) for Funds request to the new long data: note that this version contains too many colors and wrong labels. If
-# needed it needs to be corrected.
+##############################################################################
 
-x = ggplot(data = long.N.RFTSW, aes (month, value, fill = variable))
+#           Yearly mean figures for period 2012-2016
 
-plottone = x + geom_bar(stat = "identity", position = "dodge") + 
-  scale_fill_manual(values = c("royal blue", "Sky Blue", "Dark Green", "Yellow Green", "Saddle Brown", "Burlywood", "grey20", "grey30", "grey40", "grey50", "grey60", "grey70"), name = "N flux \n and form", labels = c(expression(RF~NH[4]*-N), expression(RF~NO[3]*-N), expression(TF~NH[4]*-N), expression(TF~NO[3]*-N), expression(SF~NH[4]*-N), expression(SF~NO[3]*-N), expression(RF~NO[3]*-N), expression(RF~NO[3]*-N), expression(RF~NO[3]*-N), expression(RF~NO[3]*-N))) +
-  facet_grid(year ~ .)
-labs( x = "YEAR", y = expression(N~flux~~"(kg N"~~ha^"-1"~y^"-1"*")")) 
+##############################################################################
+table.m.NX$month = format(table.m.NX$mY, "%m")
+table.m.NX$year = format(table.m.NX$mY, "%Y")
+table.2012_2016 = table.m.NX[table.m.NX$year>2011 & table.m.NX$year<2017,]
 
-# + facet_grid(mY ~ ., scales = "free") #, breaks = "var", labels = c("RF NH4-N", "RF NO3-N","TF NH4-N", "TF NO3-N","SF NH4-N", "SF NO3-N")))
-
-# aiutino per labels con subscripts e special fonts: * e' uno spazio non spazio (x es. per staccare un pedice dal testo successivo), ~ e' uno spazio fisico
-# plot(1,1, xlab=expression(N~flux~~"(kg N"~ha^"-1"~y^"-1"*")"))
-
-
+mean.fogNH4=sum(table.m.NX$NH4.N.fog)/5
+mean.fogNO3=sum(table.m.NX$NO3.N.fog)/5
+mean.RFNH4=sum(table.m.NX$NH4.N.RF)/5
+mean.RFNO3=sum(table.m.NX$NO3.N.RF)/5
+mean.TFNH4=sum(table.m.NX$NH4.N.TF)/5
+mean.TFNO3=sum(table.m.NX$NO3.N.TF)/5
+mean.SFNH4=sum(table.m.NX$NH4.N.SF)/5
+mean.SFNO3=sum(table.m.NX$NO3.N.SF)/5
