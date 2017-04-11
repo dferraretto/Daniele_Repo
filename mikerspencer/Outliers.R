@@ -53,10 +53,6 @@ db = dbConnect(SQLite(), dbname="field_lab/Griffin.SQLite")
 # Jump to line 150 to apply the changes and save them in Griffin.SQLite
 
 
-# on 25/11/2016 I got this weird "Error in plot.new() : figure margins too large". To solve it check:
-par("mar") # if the result was 5.1 4.1 4.1 2.1 then:
-par(mar=c(1,1,1,1))
-
 #####################################################################################
 #                              Part 1: field data
 #####################################################################################
@@ -65,7 +61,14 @@ par(mar=c(1,1,1,1))
 
 fielddata = dbGetQuery(db, "SELECT date, time, sample, site, variable, vals, overflowing, QC, comments FROM fielddata ORDER BY date")
 
-# 2 Outliers removed through the Outliers.Aug2016.R
+# 2 Outliers to remove: #  2 outliers: C30D2 on 2011-12-01 and C31D1 on 2011-12-15, 
+# problems on 10/04/2017: stommerda di 1/12/2011 gives error, but problem is that there is no rainfall for this date!!!
+# cosa faccio? regressione al contrario? C30D1 da C30D2? Si, toh!
+
+#NB: non c'e' ragione di rimuovere il valore fog del 1/12. Fino a che non ci capisco meglio non rimuovo proprio nulla!
+
+fielddata[(fielddata$date == '2011-12-01' & fielddata$sample == 'C30D2'),] = NA
+fielddata$vals[fielddata$date == '2011-12-15' & fielddata$sample == 'C31D1'] = NA
 
 #### FOG correction NB: I will use a capture efficiency coefficient of *0.06/0.29 instead than 0.05 but this correction will applied to the 
 #### fog_monthly db (or any other future script aimed to use the single sample values separately)
@@ -93,13 +96,13 @@ labdata = dbGetQuery(db, "SELECT * FROM labdata ORDER BY date")
 
 
 # REMOVING OUTLIERS FROM LABDATA:
-
+# OLD REMOVALS:
 #  labdata = labdata[-c(6452, 3862, 1031, 1443, 2169, 2481, 3426, 3595, 5454, 8327, 1064, 1090, 2318, 3646, 3886, 5336, 6012,
    #                  6083, 7871, 8322, 863, 2363, 2403, 3758, 3885, 5065, 5058, 2559, 5738, 5907), ] # Last check: 02/12/2016. 30 outliers deleted.
 # All the rows to be deleted in labdata are removed HERE
-
 # removed before november 2016: 3886, 5010, 5336, 6012, 6181, 7881, 1031, 2369, 2481, 5454, 2363, 2403, 3758, 3885, 5065, 5068, 2559, 5738, 5907, 7766, 7929
 
+#### LABDATA CORRECTIONS (can be updated): 
 labdata$vals[labdata$date == '2015-10-19' & labdata$sample == 'T11T2' & labdata$variable == 'NO3.N'] = NA
 labdata$vals[labdata$date == '2013-08-22' & labdata$sample == 'T11T2' & labdata$variable == 'NH4.N'] = NA
 labdata$vals[labdata$date == '2015-04-21' & labdata$sample == 'T12T1' & labdata$variable == 'NH4.N'] = NA
@@ -118,15 +121,13 @@ labdata$vals[labdata$date == '2013-10-03' & labdata$sample == 'C31D1' & labdata$
 
 
 
-#### LABDATA CORRECTIONS (can be updated): 
-
 # appending fieldata and part of labdata (Nform) 
 
 dbWriteTable(conn=db, name="labdata", labdata, overwrite = TRUE, append=F, row.names=F) #NX data added to the db
 
 dbDisconnect(db)
 
-
+rm(fielddata, labdata, db)
 
 
 

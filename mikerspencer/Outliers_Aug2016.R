@@ -95,7 +95,7 @@ fog.outl =  rainfall[which(rainfall$sample %in% fog),]
 outlierKD(RF.outl, vals)
 outlierKD(fog.outl, vals)
 
-#  2 outliers: C30D2 on 2011-12-01 and C31D1 on 2011-12-15, removed from here
+#  2 outliers: C30D2 on 2011-12-01 and C31D1 on 2011-12-15, NOT removed from here
 
 #------------------------------
 
