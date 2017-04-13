@@ -68,7 +68,10 @@ table.m.NX$NH4.N.input = table.m.NX$NH4.N.RF + table.m.NX$NH4.N.fog
 table.m.NX$NO3.N.input = table.m.NX$NO3.N.RF + table.m.NX$NO3.N.fog
 table.m.NX$NH4.output = table.m.NX$NH4.N.TF + table.m.NX$NH4.N.SF
 table.m.NX$NO3.output = table.m.NX$NO3.N.TF + table.m.NX$NO3.N.SF
+# Balance, to draw a line - chat with Richard Nair
+table.m.NX$total.Ninput = (table.m.NX$NH4.N.input + table.m.NX$NO3.N.input)
 
+table.m.NX$N.balance = (table.m.NX$NH4.N.input + table.m.NX$NO3.N.input) - (table.m.NX$NH4.output + table.m.NX$NO3.output)
 # DO NOT RUN the following 2 lines if you need the long.N.RFTSW df, go straight to WIDE TO LONG below
 
 # table.m.NX$month = format(table.m.NX$mY, "%m")

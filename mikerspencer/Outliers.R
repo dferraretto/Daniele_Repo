@@ -118,7 +118,14 @@ labdata$vals[labdata$date == '2012-04-26' & labdata$sample == 'T10S2' & labdata$
 labdata$vals[labdata$date == '2015-06-17' & labdata$sample == 'C31D1' & labdata$variable == 'NH4.N'] = NA
 labdata$vals[labdata$date == '2015-07-21' & labdata$sample == 'C31D1' & labdata$variable == 'NH4.N'] = NA
 labdata$vals[labdata$date == '2013-10-03' & labdata$sample == 'C31D1' & labdata$variable == 'NH4.N'] = NA
+labdata$vals[labdata$date == '2016-06-22' & labdata$sample == 'C31D1' & labdata$variable == 'NH4.N'] = NA
+labdata$vals[labdata$date == '2016-07-25' & labdata$sample == 'C30D1' & labdata$variable == 'NH4.N'] = 
+  labdata$vals[labdata$date == '2016-07-25' & labdata$sample == 'C31D1' & labdata$variable == 'NH4.N'] # TEMP! LATER TO BE OBTAINED BY INVERSE REGRESSION FROM C30D2
 
+# THIS WAS A THRESHOLD OUTLIER,
+# TAKING INTO CONSIDERATION THAT THE THRESHOLD WAS SET AT 0.75 (COMPARISON BETWEEN NO3 AND NH4 OUTLIERS) AND THIS WAS A DIFFERENCE
+# BETWEEN C30D1 AND C31D1 OF 0.77. HOWEVER, THE LOW VAL OF C30D2 CONFIRMED THE ANOMALY IN THE HIGH VALUE OF C30D1. LAST TWO REJECTIONS
+# WERE ADDED ON 11/04/2017 AFTER CALCULATING THE (C30D1-C31D1) OUTLIERS
 
 
 # appending fieldata and part of labdata (Nform) 

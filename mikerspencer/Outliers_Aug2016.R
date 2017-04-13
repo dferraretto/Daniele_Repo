@@ -180,10 +180,30 @@ potentialOUTLIERS = potentialOUTLIERS[order(potentialOUTLIERS  [,1]), ]
 
 RFNO3 =  labNO3[which(labNO3$sample %in% RF),]
 RFNH4 =  labNH4[which(labNH4$sample %in% RF),]
+
 fogNO3 = labNO3[which(labNO3$sample %in% fog),]
 fogNH4 = labNH4[which(labNH4$sample %in% fog),]
 
-outlierKD(RFNO3, vals)
+# check for anomalies i.e. huge differences in conc. values between C30 and C31:
+wide.RFNO3 = dcast(RFNO3, date ~ sample, value.var="vals")
+wide.RFNH4 = dcast(RFNH4, date ~ sample, value.var="vals")
+# check the difference between samples:
+wide.RFNO3$diff = wide.RFNO3$C30D1 - wide.RFNO3$C31D1
+wide.RFNH4$diff = wide.RFNH4$C30D1 - wide.RFNH4$C31D1
+
+outlierKD(wide.RFNO3, diff) # 8 identified, now check and keep a precautionary approach:
+# select potential RF-NO3 outliers rows and decide:
+wide.RFNO3$diff = abs(wide.RFNO3$diff)
+wide.RFNO3 = wide.RFNO3[order(-wide.RFNO3[,4]), ]
+potentialOUTLIERS = head(wide.RFNO3, n=7) # none accepted
+
+outlierKD(wide.RFNH4, diff)
+# select potential outliers row and decide:
+wide.RFNH4$diff = abs(wide.RFNH4$diff)
+wide.RFNH4 = wide.RFNH4[order(-wide.RFNH4[,4]), ]
+potentialOUTLIERS = head(wide.RFNH4, n=14) # 5 accepted and deleted in outliers (see note there)
+
+
 # outliers identified on 03/04/2017: 9 
 # select potential outliers row and decide:
 RFNO3 = RFNO3[order(-RFNO3[,5]), ]
