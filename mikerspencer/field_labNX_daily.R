@@ -12,8 +12,8 @@ rm(list=ls())
 library(RSQLite)
 library(zoo)
 
-### set working dir for pc:
-#setwd("C:/Users/Daniele Ferraretto/Documents/PhD-local_repo")
+### set working dir for pc: 
+setwd("C:/Users/Daniele Ferraretto/Documents/PhD-local_repo/Daniele_Repo")
 ### setwd per desktop
 setwd("M:/My PhD/R/PhD-local_repo")
 
