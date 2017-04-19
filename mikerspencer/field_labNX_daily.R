@@ -15,8 +15,7 @@ library(zoo)
 ### set working dir for pc: 
 setwd("C:/Users/Daniele Ferraretto/Documents/PhD-local_repo/Daniele_Repo")
 ### setwd per desktop
-setwd("M:/My PhD/R/PhD-local_repo")
-
+setwd("C:/Users/s1373890/Daniele_Repo")
 # remove the outliers from the Griffin SQlite: at the moment only manually by using Outliers_aug2016 to identify them and Outliers to remove them
 #source("mikerspencer/Outliers.R")
 

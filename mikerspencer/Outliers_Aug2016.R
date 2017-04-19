@@ -1,7 +1,7 @@
 #
 #
 #####            OUTLIERS            ##########
-
++++++++++   Last check: 31/03/2017  +++++++++++
 # see: https://www.r-bloggers.com/identify-describe-plot-and-remove-the-outliers-from-the-dataset/
 
 # Outlier removal by the Tukey rules on quartiles +/- 1.5 IQR
@@ -12,6 +12,9 @@ rm(list=ls())
 
 
 .libPaths("C:/Workspace/R")
+
+### setwd 4 desktop
+setwd("C:/Users/s1373890/Daniele_Repo")
 
 # Funzione per trovare gli outliers:
 outlierKD <- function(dt, var) {
@@ -48,8 +51,6 @@ outlierKD <- function(dt, var) {
 }
 
 
-setwd("M:/My PhD/R/PhD-local_repo")
-
 # on 25/11/2016 I got this weird "Error in plot.new() : figure margins too large". To solve it check:
 par("mar") # if the result was 5.1 4.1 4.1 2.1 then:
 par(mar=c(1,1,1,1))
@@ -65,6 +66,8 @@ throughvol = dbGetQuery(db, "SELECT * FROM fielddata WHERE variable = 'through v
 
 outlierKD(throughvol, vals)
 
+#3 outliers, but acceptable, as the highest is a rare TF OF
+
 #------------------------------
 
 stemvol = dbGetQuery(db, "SELECT * FROM fielddata WHERE variable = 'stem vol' ORDER BY date")
@@ -79,7 +82,7 @@ bigSF = c( "C10S1", "C10S3", "C11S6","C11S7", "C12S1", "C12S2", "C12S3")
 hugeSF <-stemvol[which(stemvol$sample %in% bigSF),]
 outlierKD(hugeSF, vals)
 
-# sF and TF DO NOT HAVE OUTLIERS!
+# sF DOes NOT HAVE OUTLIERS!
 
 #------------------------------
 
@@ -92,12 +95,15 @@ fog.outl =  rainfall[which(rainfall$sample %in% fog),]
 outlierKD(RF.outl, vals)
 outlierKD(fog.outl, vals)
 
+#  2 outliers: C30D2 on 2011-12-01 and C31D1 on 2011-12-15, NOT removed from here
 
 #------------------------------
 
 throughdepth = dbGetQuery(db, "SELECT * FROM fielddata WHERE variable = 'through depth' ORDER BY date")
 
 outlierKD(throughdepth, vals)
+
+# outliers: 3, accepted: NONE
 
 #############################################################################
 # ----------------------------   LAB data   ---------------------------------
@@ -117,21 +123,25 @@ TFNO3<-labNO3[which(labNO3$sample %in% throughfall),]
 TFNH4<-labNH4[which(labNH4$sample %in% throughfall),]
 
 outlierKD(TFNO3, vals)
-# outliers identified on 25/11/2016: 82!!! 
+# outliers identified on 03/04/2017: 82.
 # select potential outliers row and decide:
 TFNO3 = TFNO3[order(-TFNO3[,5]), ]
 potentialOUTLIERS = head(TFNO3, n=82)
-potentialOUTLIERS = potentialOUTLIERS[order(potentialOUTLIERS  [,1]), ] 
+potentialOUTLIERS = potentialOUTLIERS[order(potentialOUTLIERS  [,5]), ] 
 # removed: 1 (T11T2 on 19/10/2015)
+# 2015-10-19 T11T2 NO3.N
 
 
 outlierKD(TFNH4, vals)
-# outliers identified on 25/11/2016: 128!!! 
+# outliers identified on 03/04/2017:132
 # select potential outliers row and decide:
 TFNH4 = TFNH4[order(-TFNH4[,5]), ]
-potentialOUTLIERS = head(TFNH4, n=128)
+potentialOUTLIERS = head(TFNH4, n=132)
 potentialOUTLIERS = potentialOUTLIERS[order(potentialOUTLIERS  [,1]), ] 
-# removed 5 TFNH4 rows: stitching to the function yet EXCLUDING the date 24/07/2014: 4 vals in T plot are around 4 mg/l!! 
+# removed 3 TFNH4 rows: the 4th and 5th highest values are not much higher than other values in the same date (high deposition event)
+  # 2013-08-22 T11T2 NH4.N
+  # 2015-04-21 T12T1 NH4.N
+  # 2014-04-24 T12T1 NH4.N
 
 
 # lab stemflows
@@ -142,53 +152,88 @@ SFNO3<-labNO3[which(labNO3$sample %in% stemflow),]
 SFNH4<-labNH4[which(labNH4$sample %in% stemflow),]
 
 outlierKD(SFNO3, vals)
-# outliers identified on 25/11/2016: 180!!! 
+# outliers identified on 31/03/2017: 186
 # select potential outliers row and decide:
 SFNO3 = SFNO3[order(-SFNO3[,5]), ]
-potentialOUTLIERS = head(SFNO3, n=128)
-potentialOUTLIERS = potentialOUTLIERS[order(potentialOUTLIERS  [,1]), ] # 7 accepted, see outliers.R
-
+potentialOUTLIERS = head(SFNO3, n=186)
+# Anche in questo caso i numeri alti sono tanti, ma preferisco eliminarne uno solo pur sapendo che i valori molto elevati vengono da quasi 0 volumes,
+# good to give an explanation in the data quality sub-chapter
+# 2014-07-24 T10S2 NO3.N
 
 outlierKD(SFNH4, vals)
-# outliers identified on 25/11/2016: 146!!! 7 accepted, see outliers.R
+# outliers identified on 03/04/2017: 156 
 # select potential outliers row and decide:
 SFNH4 = SFNH4[order(-SFNH4[,5]), ]
-potentialOUTLIERS = head(SFNH4, n=146)
+potentialOUTLIERS = head(SFNH4, n=156)
 potentialOUTLIERS = potentialOUTLIERS[order(potentialOUTLIERS  [,1]), ]
+# 7 accepted, all those > 10:
+# 2014-07-24 T10S2 NH4.N
+# 2014-06-20 T12S2 NH4.N
+# 2015-02-23 T10S1 NH4.N
+# 2013-07-28 T10S2 NH4.N
+# 2013-08-22 C10S1 NH4.N
+# 2015-02-23 T10S2 NH4.N
+# 2012-04-26 T10S2 NH4.N
+
 
 # LAB RAINFALL AND FOG
 
 RFNO3 =  labNO3[which(labNO3$sample %in% RF),]
 RFNH4 =  labNH4[which(labNH4$sample %in% RF),]
+
 fogNO3 = labNO3[which(labNO3$sample %in% fog),]
 fogNH4 = labNH4[which(labNH4$sample %in% fog),]
 
-outlierKD(RFNO3, vals)
-# outliers identified on 25/11/2016: 8 
+# check for anomalies i.e. huge differences in conc. values between C30 and C31:
+wide.RFNO3 = dcast(RFNO3, date ~ sample, value.var="vals")
+wide.RFNH4 = dcast(RFNH4, date ~ sample, value.var="vals")
+# check the difference between samples:
+wide.RFNO3$diff = wide.RFNO3$C30D1 - wide.RFNO3$C31D1
+wide.RFNH4$diff = wide.RFNH4$C30D1 - wide.RFNH4$C31D1
+
+outlierKD(wide.RFNO3, diff) # 8 identified, now check and keep a precautionary approach:
+# select potential RF-NO3 outliers rows and decide:
+wide.RFNO3$diff = abs(wide.RFNO3$diff)
+wide.RFNO3 = wide.RFNO3[order(-wide.RFNO3[,4]), ]
+potentialOUTLIERS = head(wide.RFNO3, n=7) # none accepted
+
+outlierKD(wide.RFNH4, diff)
+# select potential outliers row and decide:
+wide.RFNH4$diff = abs(wide.RFNH4$diff)
+wide.RFNH4 = wide.RFNH4[order(-wide.RFNH4[,4]), ]
+potentialOUTLIERS = head(wide.RFNH4, n=14) # 5 accepted and deleted in outliers (see note there)
+
+
+# outliers identified on 03/04/2017: 9 
 # select potential outliers row and decide:
 RFNO3 = RFNO3[order(-RFNO3[,5]), ]
-potentialOUTLIERS = head(RFNO3, n=8)
-potentialOUTLIERS = potentialOUTLIERS[order(potentialOUTLIERS  [,1]), ] # nessuno accettato!
-
+potentialOUTLIERS = head(RFNO3, n=9)
+potentialOUTLIERS = potentialOUTLIERS[order(potentialOUTLIERS  [,1]), ] 
+# NONE accepted, all make sense as more or less coupled per date
 outlierKD(RFNH4, vals)
-# outliers identified on 25/11/2016: 8 
+# outliers identified on 03/04/2017: 9 
 # select potential outliers row and decide:
 RFNH4 = RFNH4[order(-RFNH4[,5]), ]
-potentialOUTLIERS = head(RFNH4, n=8)
-potentialOUTLIERS = potentialOUTLIERS[order(potentialOUTLIERS  [,1]), ] # 3/8 accepted (C31D1 on 2013-10-03, 2015-06-07, 2015-07-21)
+potentialOUTLIERS = head(RFNH4, n=9)
+potentialOUTLIERS = potentialOUTLIERS[order(potentialOUTLIERS  [,1]), ] # 3/8 accepted, as much higher than the other sample in the same date:
+  # 2015-06-17 C31D1 NH4.N
+  # 2015-07-21 C31D1 NH4.N
+  # 2013-10-03 C31D1 NH4.N
 
 outlierKD(fogNO3, vals)
-# outliers identified on 25/11/2016: 4 
+# outliers identified on 03/04/2017: 4 
 # select potential outliers row and decide:
 fogNO3 = fogNO3[order(-fogNO3[,5]), ]
 potentialOUTLIERS = head(fogNO3, n=4)
-potentialOUTLIERS = potentialOUTLIERS[order(potentialOUTLIERS  [,1]), ] # nessuno accettato as all belonging to high deposition dates!
+# NONE ACCEPTED as all belonging to high deposition dates!
 
 outlierKD(fogNH4, vals)
 # outliers identified on 25/11/2016: 4 
 # select potential outliers row and decide:
 fogNH4 = fogNH4[order(-fogNH4[,5]), ]
 potentialOUTLIERS = head(fogNH4, n=4)
-potentialOUTLIERS = potentialOUTLIERS[order(potentialOUTLIERS  [,1]), ] # nessuno accettato, same as above
+potentialOUTLIERS = potentialOUTLIERS[order(potentialOUTLIERS  [,1]), ] 
+# NONE ACCEPTED as all belonging to high deposition dates!
+
 #------------------------
 
