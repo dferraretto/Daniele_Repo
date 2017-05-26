@@ -14,8 +14,7 @@ rm(list=ls())
 #setwd("M:/My PhD/R/PhD-local_repo")
 setwd("C:/Users/s1373890/Daniele_Repo")
 
-Incomplete_d15N_results <- read_csv("C:/Users/s1373890/Daniele_Repo/15N_experiment/15N_fieldlab/Incomplete_d15N_results.csv")  # read csv file 
-
+N_Ndep_15N_simplified <- read_csv("C:/Users/s1373890/Daniele_Repo/15N_experiment/15N_fieldlab/15N_Ndep_simplified.csv")
 # crop all samples but TF and SF
 TFTS = c("T1", "T2", "T3", "S1", "S2", "S3")
 TFSF15.N = Incomplete_d15N_results[which(Incomplete_d15N_results$Sample == "T1" | Incomplete_d15N_results$Sample == "T2" | Incomplete_d15N_results$Sample == "T3"
