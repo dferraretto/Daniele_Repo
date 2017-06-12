@@ -21,12 +21,46 @@ N_Ndep_15N_simplified <- read_csv("C:/Users/s1373890/Daniele_Repo/15N_experiment
 T1.area = 11.8
 T2.area = 11.5
 T3.area = 13.8
+T1.TF.coll = 0.9472
+T2.TF.coll = 0.9457
+T3.TF.coll = 0.9390
 
-# crop all samples but TF and SF
-TFTS = c("T1", "T2", "T3", "S1", "S2", "S3")
-TFSF15.N = Incomplete_d15N_results[which(Incomplete_d15N_results$Sample == "T1" | Incomplete_d15N_results$Sample == "T2" | Incomplete_d15N_results$Sample == "T3"
-                                         | Incomplete_d15N_results$Sample == "S1"| Incomplete_d15N_results$Sample == "S2"| Incomplete_d15N_results$Sample == "S3"),]
 
+# select the replicate for the T1 samples:
+# by creating a df with the rows to be removed
+TF.2.remove <- rbind(TFSF15.N[ which(TFSF15.N$Date =='2016-08-10'
+                         & TFSF15.N$Sample == "T1"), ],
+                     TFSF15.N[ which(TFSF15.N$Date =='2016-08-10'
+                                     & TFSF15.N$Sample == "T2"), ],
+                     TFSF15.N[ which(TFSF15.N$Date =='2016-08-10'
+                                     & TFSF15.N$Sample == "T3"), ])
+
+TF.2.remove = TF.2.remove[is.na(TF.2.remove$Replicate), ]
+
+# remove rows by anti_join (deletes rows on 1 db based on a 2nd db with one or MORE columns in common)
+library(dplyr)
+N_Ndep_15N_simplified = anti_join(N_Ndep_15N_simplified, TF.2.remove, by = c("Sample", "Date", "Replicate"))
+
+# calculate N masses
+
+N_Ndep_15N_simplified$NH4.N = N_Ndep_15N_simplified$NH4*N_Ndep_15N_simplified$Volume*14/18
+
+N_Ndep_15N_simplified$NO3.N = N_Ndep_15N_simplified$NO3*N_Ndep_15N_simplified$Volume*14/62
+
+# crop all samples but T13Tn, TF and SF
+
+TFSF.15N = N_Ndep_15N_simplified[which(N_Ndep_15N_simplified$Sample == "T1" | N_Ndep_15N_simplified$Sample == "T2" | N_Ndep_15N_simplified$Sample == "T3"
+                                       | N_Ndep_15N_simplified$Sample == "S1"| N_Ndep_15N_simplified$Sample == "S2"| N_Ndep_15N_simplified$Sample == "S3"
+                                       | N_Ndep_15N_simplified$Sample == "T13T1" | N_Ndep_15N_simplified$Sample == "T13T2" | N_Ndep_15N_simplified$Sample == "T13T3"),]
+
+# drop all but masses
+TFSF.15N = TFSF.15N[ , c(1,2,16,17)]
+
+
+# sum N masses by tree
+library(reshape2)
+TFSF.15N.long = melt(TFSF.15N, id.vars = c("Date", "Sample"))
+TFSF.15 = dcast(TFSF.15N.long, Date ~ Sample + variable , value.var = "value")
 # get rid and quick
 TFSF15.N = TFSF15.N[, c(1,2,5,12,13,14,15,16,17)]
 
