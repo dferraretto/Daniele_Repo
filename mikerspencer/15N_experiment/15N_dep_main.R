@@ -28,12 +28,12 @@ T3.TF.coll = 0.9390
 
 # select the replicate for the T1 samples:
 # by creating a df with the rows to be removed
-TF.2.remove <- rbind(TFSF15.N[ which(TFSF15.N$Date =='2016-08-10'
-                         & TFSF15.N$Sample == "T1"), ],
-                     TFSF15.N[ which(TFSF15.N$Date =='2016-08-10'
-                                     & TFSF15.N$Sample == "T2"), ],
-                     TFSF15.N[ which(TFSF15.N$Date =='2016-08-10'
-                                     & TFSF15.N$Sample == "T3"), ])
+TF.2.remove <- rbind(N_Ndep_15N_simplified[ which(N_Ndep_15N_simplified$Date =='2016-08-10'
+                         & N_Ndep_15N_simplified$Sample == "T1"), ],
+                     N_Ndep_15N_simplified[ which(N_Ndep_15N_simplified$Date =='2016-08-10'
+                                     & N_Ndep_15N_simplified$Sample == "T2"), ],
+                     N_Ndep_15N_simplified[ which(N_Ndep_15N_simplified$Date =='2016-08-10'
+                                     & N_Ndep_15N_simplified$Sample == "T3"), ])
 
 TF.2.remove = TF.2.remove[is.na(TF.2.remove$Replicate), ]
 
@@ -47,41 +47,50 @@ N_Ndep_15N_simplified$NH4.N = N_Ndep_15N_simplified$NH4*N_Ndep_15N_simplified$Vo
 
 N_Ndep_15N_simplified$NO3.N = N_Ndep_15N_simplified$NO3*N_Ndep_15N_simplified$Volume*14/62
 
+# crop the NAs (to get rid of ghost NAs)
+N_Ndep_15N_simplified = N_Ndep_15N_simplified[complete.cases(N_Ndep_15N_simplified[, 4:5]),] #this detects those rows where NH4 and NO3 = NA
+
 # crop all samples but T13Tn, TF and SF
 
 TFSF.15N = N_Ndep_15N_simplified[which(N_Ndep_15N_simplified$Sample == "T1" | N_Ndep_15N_simplified$Sample == "T2" | N_Ndep_15N_simplified$Sample == "T3"
-                                       | N_Ndep_15N_simplified$Sample == "S1"| N_Ndep_15N_simplified$Sample == "S2"| N_Ndep_15N_simplified$Sample == "S3"
-                                       | N_Ndep_15N_simplified$Sample == "T13T1" | N_Ndep_15N_simplified$Sample == "T13T2" | N_Ndep_15N_simplified$Sample == "T13T3"),]
+                                       | N_Ndep_15N_simplified$Sample == "S1"| N_Ndep_15N_simplified$Sample == "S2"| N_Ndep_15N_simplified$Sample == "S3"),]
+# | N_Ndep_15N_simplified$Sample == "T13T1" | N_Ndep_15N_simplified$Sample == "T13T2" | N_Ndep_15N_simplified$Sample == "T13T3"
 
 # drop all but masses
 TFSF.15N = TFSF.15N[ , c(1,2,16,17)]
 
+#substring Samples to the number of trees
+TFSF.15N$tree = substr(TFSF.15N$Sample, start=2, stop=2)
+
 
 # sum N masses by tree
 library(reshape2)
-TFSF.15N.long = melt(TFSF.15N, id.vars = c("Date", "Sample"))
-TFSF.15 = dcast(TFSF.15N.long, Date ~ Sample + variable , value.var = "value")
-# get rid and quick
-TFSF15.N = TFSF15.N[, c(1,2,5,12,13,14,15,16,17)]
+TFSF.15N.long = melt(TFSF.15N, id.vars = c("Date", "Sample", "tree"))
+TF15 = TFSF.15N.long[which(TFSF.15N.long$Sample== "T1" | TFSF.15N.long$Sample== "T2" | TFSF.15N.long$Sample== "T3"), ]
+SF15 = TFSF.15N.long[which(TFSF.15N.long$Sample== "S1" | TFSF.15N.long$Sample== "S2" | TFSF.15N.long$Sample== "S3"), ]
 
-d15N.db = TFSF15.N[, c(1,2,6,7)]
 
-library(reshape2)
+# order the 2 subsets by date and sample
+TF15 = TF15[with(TF15, order(Date, Sample, tree)), ]
+SF15 = SF15[with(SF15, order(Date, Sample, tree)), ]
 
-long.d15N = melt(d15N.db, id = c("Date", "Sample"))
-summary(long.d15N)
-long.d15N$Date = as.Date(long.d15N$Date)
-# reorder dates
-dates <- unique(sort(long.d15N$Date))
-long.d15N$Date <- factor(long.d15N$Date, labels = dates,  ordered = T)
-long.d15N$Date=as.Date(long.d15N$Date)
-long.d15N$Sample = as.factor(long.d15N$Sample)
+TFSF.Nx = merge(TF15, SF15, by = c("Date", "variable", "tree"), all = FALSE)
+TFSF.Nx$Nmass = TFSF.Nx$value.x + TFSF.Nx$value.y
+
+# Create a cumulative Nmass column    ???????
+
+
+##########################     PLOT N mass
 library(ggplot2)
+TFSF.Nx$Date = as.Date(TFSF.Nx$Date)
 
-##########################     PLOT d15N
+ggplot(data = TFSF.Nx, aes (Date, Nmass, group = Date)) + geom_boxplot() + facet_grid(variable ~ .)
+
+# cosa manca: al di la delle estetiche, i dati di massa non sono ancora "scalati", vanno moltiplicati per il 
+# fattore Tx.area/x.TF.coll. Poi va creato un valore cumulativo da plottare per compararlo col valore spruzzato (line to be added)
 
 
-plot.d15N = ggplot(data = long.d15N, aes (Date, value, colour = Sample)) + geom_point(size = 2)
+
 
 #orange.bold.text <- element_text(face = "bold", color = "orange") # per bold AND italic: bold.italic
 #orange.text <- element_text(face = "plain", color = "orange")
