@@ -77,14 +77,31 @@ SF15 = SF15[with(SF15, order(Date, Sample, tree)), ]
 TFSF.Nx = merge(TF15, SF15, by = c("Date", "variable", "tree"), all = FALSE)
 TFSF.Nx$Nmass = TFSF.Nx$value.x + TFSF.Nx$value.y
 
-# Create a cumulative Nmass column    ???????
+
+# Define season
+TFSF.Nx$season <- "summer"
+TFSF.Nx$season[TFSF.Nx$Date > "2016-12-31"] <- "winter"
+
+summer.Nx = TFSF.Nx[TFSF.Nx$season == "summer",]
+winter.Nx = TFSF.Nx[TFSF.Nx$season == "winter",]
+
+# Create a cumulative Nmass column - to be calculated after splitting the two seasonal sets
+# OR to be checked as a whole by summing the two treatments N masses
+
+require(data.table)
+summer.Nx <- data.table(summer.Nx)
+summer.Nx = summer.Nx[, Cum.Sum := cumsum(Nmass),by=list(variable, tree)]
+winter.Nx <- data.table(winter.Nx)
+winter.Nx = winter.Nx[, Cum.Sum := cumsum(Nmass), by=list(variable, tree)]
+
 
 
 ##########################     PLOT N mass
 library(ggplot2)
-TFSF.Nx$Date = as.Date(TFSF.Nx$Date)
 
-ggplot(data = TFSF.Nx, aes (Date, Nmass, group = Date)) + geom_boxplot() + facet_grid(variable ~ .)
+# cumulative N per application
+ggplot(data = summer.Nx, aes (Date, Cum.Sum)) + geom_smooth() + facet_grid(variable ~ .)
+ggplot(data = winter.Nx, aes (Date, Cum.Sum)) + geom_smooth() + facet_grid(variable ~ .)
 
 # cosa manca: al di la delle estetiche, i dati di massa non sono ancora "scalati", vanno moltiplicati per il 
 # fattore Tx.area/x.TF.coll. Poi va creato un valore cumulativo da plottare per compararlo col valore spruzzato (line to be added)
