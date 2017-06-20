@@ -114,7 +114,7 @@ summer.Nx = summer.Nx[, Cum.Sum := cumsum(Nmass),by=list(N_form, tree)]
 winter.Nx <- data.table(winter.Nx)
 winter.Nx = winter.Nx[, Cum.Sum := cumsum(Nmass), by=list(N_form, tree)]
 
-rm(SF15, TF15, TF.2.remove, TFSF.15N.long, TFSF.15N, TFSF.Nx)
+#rm(SF15, TF15, TF.2.remove, TFSF.15N.long, TFSF.15N, TFSF.Nx)
 
 ########################    PLOTS    #############################
 
@@ -127,16 +127,49 @@ rm(SF15, TF15, TF.2.remove, TFSF.15N.long, TFSF.15N, TFSF.Nx)
 source("mikerspencer/RFTSW_monthly.R")
 
 long.N.RFTSW$mY = as.Date(long.N.RFTSW$mY)
-long.N.RFTSW = long.N.RFTSW[long.N.RFTSW$mY> "2016-07-01" & long.N.RFTSW$mY<"2017-07-01",]
+long.N.RFTSW = long.N.RFTSW[long.N.RFTSW$mY> "2016-07-01" & long.N.RFTSW$mY<"2017-01-01",]
 
-# vabbuo' ho cancellato tutto perche sono coglione, comunque copia incolla dal grafico 3 del plots RFSTWmonthly e fanculo
+N.inout <- long.N.RFTSW[long.N.RFTSW$variable %like% "input" | long.N.RFTSW$variable %like% "output",]
+
+N.inout <- subset(N.inout, variable != "total.Ninput")
+N.inout = droplevels(N.inout)
+N.inout$key = substr(N.inout$variable, start=1, stop=3)
 
 
-################################################################
-#   PLOT CUMULATED N MASS by APPLICATION AND collection date:
-################################################################
-library(ggplot2)
+# prepare the faceting factor for a parsed labelling
+N.inout$key <- factor(N.inout$key, labels = c("NH[4]-N","NO[3]-N"))
 
+  ctrl1 = ggplot(data = N.inout, aes (month, value, fill = variable)) + 
+    geom_bar(stat = "identity", position = "dodge") + 
+    scale_fill_manual(values = c("cadetblue4", "cadetblue2", "Dark Green", "Yellow Green"), name = "N flux \n and form", 
+                      labels = c(expression(~fog+RF~NH[4]*-N), expression(~fog+RF~NO[3]*-N), 
+                                 expression(~TF+SF~NH[4]*-N), expression(~TF+SF~NO[3]*-N))) +
+    facet_grid(key ~ ., labeller = label_parsed) + ggtitle(expression(~N[dep]*~"and N flux under the canopy")) +
+    labs( x = "Month", y = expression(N~flux~~"(kg N"~~ha^"-1"~month^"-1"*")")) + theme_bw(base_size = 12)+
+    theme(panel.border = element_blank(), plot.background = element_rect(fill = "transparent",colour = NA), 
+          plot.title = element_text(hjust = 0.5, size = 16, colour = 'red4')) 
+  
+  # Calculate a Control cumulative value to compare my new data
+  
+  N.inout$csum <- ave(N.inout$value, N.inout$variable, FUN=cumsum)
+  
+  # Plot'em!
+
+  ctrl2 = ggplot(data = N.inout, aes (month, csum, fill = variable)) + 
+    geom_bar(stat = "identity", position = "dodge") + 
+    scale_fill_manual(values = c("cadetblue4", "cadetblue2", "Dark Green", "Yellow Green"), name = "N flux \n and form", 
+                      labels = c(expression(~fog+RF~NH[4]*-N), expression(~fog+RF~NO[3]*-N), 
+                                 expression(~TF+SF~NH[4]*-N), expression(~TF+SF~NO[3]*-N))) +
+    facet_grid(key ~ ., labeller = label_parsed) + ggtitle(expression("Cumulative"~N[dep]*~"and N content under the canopy")) +
+    labs( x = "Month", y = expression(Cumulative~N~flux~~"(kg N"~~ha^"-1"~month^"-1"*")")) + theme_bw(base_size = 12)+
+    theme(panel.border = element_blank(), plot.background = element_rect(fill = "transparent",colour = NA), 
+          plot.title = element_text(hjust = 0.5, size = 16, colour = 'red4')) 
+  
+
+  ################################################################
+  #   PLOT CUMULATED N MASS by APPLICATION AND collection date:
+  ################################################################
+  
 #extract the application N data
 
 N_app = N_Ndep_15N_simplified[grep("T13T", N_Ndep_15N_simplified$Sample),c(1,2,4,5)]
@@ -154,24 +187,37 @@ N_app_win = N_app_long[N_app_long$Date == "2017-02-28", ]
 dummy1.0 <- data.frame(X = c("NH4.N", "NO3.N"), Z = c(1335.444, 1332.710))
 dummy1.1 <- data.frame(X = c("NH4.N", "NO3.N"), Z = c(1246.000, 1243.065))
 dummy1.2 <- data.frame(X = c("NH4.N", "NO3.N"), Z = c(1403.889, 1400.903))
+a = c(1335.444, 1332.710)
+b = c(1246.000, 1243.065)
+c = c(1403.889, 1400.903)
 
 dummy2.0 <- data.frame(X = c("NH4.N", "NO3.N"), Z = c(1494.889, 1491.903))
 
-ggplot(data = summer.Nx, aes (date, Cum.Sum)) + geom_smooth(color = 'red4') + facet_grid(N_form ~ .) +
-    ggtitle("Cumulative N mass collected in throughfall \nand stemflow after the summer application") +
-    labs( x = "date", y = "cumulative N mass (mg/tree)") + theme_bw(base_size = 12) +
-    geom_hline(data = dummy1.0, aes(yintercept = Z), color = "red3", size = 1) +
-    geom_hline(data = dummy1.1, aes(yintercept = Z), color = "grey25", linetype = 3, size = 0.8) +
-    geom_hline(data = dummy1.2, aes(yintercept = Z), color = "grey25", linetype = 3, size = 0.8) +
-      theme(plot.title = element_text(hjust = 0.1, size = 18, colour = 'red4'),
-          plot.background = element_rect(fill = "transparent",colour = NA)) 
+summer.Nx$N_form <- factor(summer.Nx$N_form, labels = c("NH[4]-N","NO[3]-N"))
 
+ plot1 = ggplot(data = summer.Nx, aes (date, Cum.Sum)) + geom_smooth() + 
+   facet_grid(N_form ~ ., labeller = label_parsed) +
+   ggtitle("Cumulative N mass collected in throughfall \nand stemflow after the summer application") +
+   labs(x = "date", y = "cumulative N mass (mg/tree)") + theme_bw(base_size = 12) +
+   scale_fill_manual(values = c('NH[4]-N' = "lightskyblue",'NO[3]-N' = "mediumblue"),
+                     labels = c(expression(~NH[4]*-N), expression(~NO[3]*-N), 
+                     name = "N applied and collected by form")) +
+    geom_hline(data = dummy1.0, aes(yintercept = Z), size = 1) +
+    geom_hline(data = dummy1.1, aes(yintercept = Z), linetype = 3, size = 0.8) +
+    geom_hline(data = dummy1.2, aes(yintercept = Z), linetype = 3, size = 0.8) +
+      theme(plot.title = element_text(hjust = 0.1, size = 16, colour = 'red4'),
+          plot.background = element_rect(fill = "transparent",colour = NA)) 
+ 
+ 
+ # per aggiungere un text per ogni facet grid qui lo spiega meglio https://stackoverflow.com/questions/20428902/geom-text-writing-all-data-on-all-facets
+ # ma comunque e' da farsi scoppiare la testa a cazzo, tanto vale creare la curva cumulata
+ 
 
 ggplot(data = winter.Nx, aes (date, Cum.Sum)) + geom_smooth(color = 'midnightblue') + facet_grid(N_form ~ .) +
     ggtitle("Cumulative N mass collected in throughfall \nand stemflow after the winter application") +
   labs( x = "date", y = "cumulative N mass (mg/tree)") + theme_bw(base_size = 12) +
   geom_hline(data = dummy2.0, aes(yintercept = Z), color = "red3", linetype = 3, size = 1) +
-  theme(plot.title = element_text(hjust = 0.1, size = 18, colour = 'midnightblue'),
+  theme(plot.title = element_text(hjust = 0.1, size = 16, colour = 'midnightblue'),
         plot.background = element_rect(fill = "transparent",colour = NA)) 
 
 rm(dummy1.0, dummy1.1, dummy1.2, dummy2.0, N_app, N_app_long,N_app_sum, N_app_win,
@@ -213,29 +259,37 @@ d15N.TF$Date <- as.Date(d15N.TF$Date, format = "%d/%m/%Y")
 Edired.text <- element_text(face = "plain", color = "red3")
 
 # SUMMER APPLICATION
-ggplot() + 
-  geom_smooth(data = summer.Nx, aes(date, Nmass, fill = N_form)) + facet_grid(key ~ .) +
+
+summer.Nx$key <- factor(summer.Nx$key, labels = c("NH[4]-N","NO[3]-N"))
+long.d15N.TF$key <- factor(long.d15N.TF$key, labels = c("NH[4]-N","NO[3]-N"))
+
+plot2 = ggplot() + 
+  geom_smooth(data = summer.Nx, aes(date, Nmass, fill = N_form)) + 
+  facet_grid(key ~ ., labeller = label_parsed) +
   geom_boxplot(data = long.d15N.TF, aes(date, value, fill = N_form, group = interaction(factor(date), N_form, alpha = 0.5))) +
-  scale_fill_manual(values = c('d15N_NH4' = "red4",'d15N_NO3' = "pink",'NH4.N' ="lightskyblue",'NO3.N' ="mediumblue"),
-                    labels = c(expression(paste(delta,{15},NH[4])),expression(paste(delta,{15},NO[3])),
+  scale_fill_manual(values = c('d15N_NH4' = "red4",'d15N_NO3' = "pink",'NH[4]-N' ="lightskyblue",'NO[3]-N' ="mediumblue"),
+                    labels = c(expression(paste(~~delta^{15},NH[4])),expression(paste(~~delta^{15},NO[3])),
                                expression(~NH[4]*-N), expression(~NO[3]*-N)), 
                     name = "N form and isotope") +
-  ggtitle(expression("N mass and"~paste(delta, {15},"N (\u2030) collected under the canopy after the summer application"))) +
+  ggtitle(expression(atop("N mass and"~paste(delta^{15},"N (\u2030) collected under"), paste("the canopy after the summer application")))) +
   labs( x = "date", y = "cumulative N mass (mg/tree)") + theme_bw(base_size = 12) +
-  scale_y_continuous(sec.axis = sec_axis(~.*1, name = expression(paste(delta,{15},N)))) +
+  scale_y_continuous(sec.axis = sec_axis(~.*1, name = expression(paste(delta^{15},"N (\u2030)")))) +
   theme(axis.text.y.right = Edired.text, axis.title.y.right = Edired.text, 
-        plot.title = element_text(hjust = 0.1, size = 18, colour = 'red4'),
+        plot.title = element_text(hjust = 0.1, size = 16, colour = 'red4'),
         plot.background = element_rect(fill = "transparent",colour = NA)) 
 
+
+library(Rmisc)
+multiplot(ctrl1, ctrl2, plot2, plot1, cols = 2)
+# NOTE: per ora questo multiplot e' un ottimo punto di arrivo. Prossima possibile modifica e' sul plot1, cioe' anziche'
+# le linee orizzontali di applicazione una curva = applicazione[n]+cum.N[dep]
+
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# ancora da risolvere: asse secondario per d15N; i dati lab improbabili di ottobre 2016!
+# WINTER APPLICATION - data not yet available
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-## WINTER APPLICATION - data not yet available
 
-  scale_y_continuous(sec.axis = sec_axis(~.*280, name = "monthly precipitation (mm)")) +
-
-
+  
 #testing on 15N (working)
 ggplot(data = long.d15N.TF, aes(x = Date, y = value)) +
   geom_boxplot(aes(fill = variable, group = interaction(factor(Date), variable))) + facet_grid(variable ~ .)

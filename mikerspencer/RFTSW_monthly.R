@@ -5,7 +5,7 @@
 # --------------------------------------------------------
 # --------------------------------------------------------
 # clear the memory
-rm(list=ls())
+#rm(list=ls())
 
 .libPaths("C:/Workspace/R") # adjust the issues with my desktop demmerda
 ### set working dir for pc:
