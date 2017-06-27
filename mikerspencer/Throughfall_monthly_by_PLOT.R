@@ -4,7 +4,7 @@
 #  updated: 15/10/2015          last update: 21/04/2016
 # --------------------------------------------------------
 # --------------------------------------------------------
-rm(list=ls())
+#rm(list=ls())
 
 .libPaths("C:/Workspace/R") # adjust the issues with my desktop demmerda
 
@@ -136,7 +136,7 @@ site = "control"
 mNH4TFC=data.frame(cbind(monthlyNH4.TFC, site, NH4.tfc))
 colnames(mNH4TFT)=c("mY", "vals", "site", "var")
 # Housekeeping:
-rm(tf.vol.dd, meanddNH4TFT, meanddNO3TFT, meanddNH4TFC, meanddNO3TFC, tf, tfc, tft, NH4data, NO3data,
+rm(tf.vol.dd, meanddNH4TFT, meanddNO3TFT, meanddNH4TFC, meanddNO3TFC, tf, tfc, tft,
    TFC.NH4, TFC.NO3, TFT.NH4, TFT.NO3, site, NH4.tfc, NO3.tfc, NH4.tft, NO3.tft, control, treatment)
 
 ### remember remember: all data are expressed in mg/m2 so far. To express them in kg/ha I need to 
