@@ -107,8 +107,10 @@ dd.dates=cbind(dates,days)
 dd.dates = as.data.frame(dd.dates)
 dd.dates$dates = as.Date(dd.dates$dates)
 
+# OK, il 28/07 si chiude qui con il dd.dates pronto, devo capire come appicciarlo al db degli errori per "ponderare il peso di ogni errore sul
+# numero di giorni in quel mese della nth sampling date (sara' una roba, a naso di n-1 e n+1 o qualcosa cosi')
 
-fielddata=merge(x,dd.dates,by.x="date",by.y="dates",na.rm=FALSE)
+dTF.samplingdate1 = merge(dTF.samplingdate,dd.dates,by.x="date",by.y="dates",na.rm=FALSE, all = T)
 fielddata$days=as.numeric(levels(fielddata$days))[fielddata$days] #this is to "read" days as a number = to the level (weird things happens otherwise...)
 
 dates2 = merge(dates, date.end.month, all = T)
