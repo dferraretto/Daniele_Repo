@@ -339,6 +339,6 @@ labdata = w[ , c(1, 4, 2, 3, 5)]
 dbWriteTable(conn=db, name="labdata", labdata, overwrite = TRUE, append=F, row.names=F) #NX data added to the db
 dbDisconnect(db)
 
-rm(db, labdata, dates, days, diffdays, interpol.labdata, w, wide.labdata, widedata.days, widelabdata.days)
+rm(db, labdata, dates, days, diffdays, interpol.labdata, w, wide.labdata, widelabdata.days)
 
 
