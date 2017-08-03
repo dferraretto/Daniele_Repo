@@ -1,12 +1,18 @@
-# --------------------------------------------------------
-#                  ERROR PROPAGATION
-#  Author: Daniele Ferraretto
-#  started on 26th July, 2017
-#  updated:                        last update: 31/07/2017
-# --------------------------------------------------------
-# --------------------------------------------------------
+############## --------------------------------------------------------
+##############                  ERROR PROPAGATION
+##############  Author: Daniele Ferraretto
+##############  started on 26th July, 2017
+##############  updated:                        last update: 31/07/2017
+############## --------------------------------------------------------
+############## --------------------------------------------------------
+
+#  ------>>>  NOTE: ALL ERRORS ARE IN mg N / m2. You need to divide them by 100 to compare them with the monthly data,
+#             expressed in Kg N / ha
+
+
 # clear the memory
-rm(list=ls())
+#rm(list=ls())
+
 
 .libPaths("C:/Workspace/R") # adjust the issues with my desktop demmerda
 ### set working dir for pc:
@@ -40,7 +46,12 @@ names(tf.depth.mean) = c("date", "TF.depth.mean")
 # 2: SD of depth value by sampling date
 
 tf.depth.SD=aggregate(vals ~ date, data = tf, FUN = sd, na.rm = TRUE )
+
+# 4a. 2SD
+#tf.depth.SD$vals = tf.depth.SD$vals * 2
+
 names(tf.depth.SD) = c("date", "TF.depth.SD")
+
 
 
 ##########              ERROR IN TF N LAB VALS                  #############
@@ -186,8 +197,11 @@ names(sf.vol.mean) = c("date", "SF.depth.mean")
 # 2: SD of depth value by sampling date
 
 sf.vol.SD=aggregate(vals ~ date, data = sf, FUN = sd, na.rm = TRUE )
-names(sf.vol.SD) = c("date", "SF.depth.SD")
 
+# 4a. 2SD
+#sf.vol.SD$vals = sf.vol.SD$vals * 2
+
+names(sf.vol.SD) = c("date", "SF.depth.SD")
 
 ##########              ERROR IN TF N LAB VALS                  #############
 
@@ -210,6 +224,7 @@ names(NH4.SF.mean) = c("date", "SF.NH4.mean")
 #4: SD of lab values by sampling date
 
 NO3.SF.SD = aggregate(vals ~ date, data = NO3.SF, FUN = sd, na.rm = TRUE )
+
 names(NO3.SF.SD) = c("date", "SF.NO3.SD")
 
 NH4.SF.SD = aggregate(vals ~ date, data = NH4.SF, FUN = sd, na.rm = TRUE )
@@ -327,6 +342,10 @@ names(rf.depth.mean) = c("date", "RF.depth.mean")
 # 2: SD of depth value by sampling date
 
 rf.depth.SD=aggregate(vals ~ date, data = rf, FUN = sd, na.rm = TRUE )
+
+# 4a. 2SD
+#rf.depth.SD$vals = rf.depth.SD$vals * 2 # 95% confidence interval
+
 names(rf.depth.SD) = c("date", "RF.depth.SD")
 
 
@@ -445,4 +464,27 @@ dRF.err$value= (dRF.err$value)^0.5 # square root to calculate the error propagat
 
 #housekeeping
 rm(dates2, dd.dates, dRF.samplingdate, dRF.samplingdate1, NH4.RF, NH4.RF.mean, NH4.RF.SD, NO3.RF, NO3.RF.mean, NO3.RF.SD, rf, rf.depth.mean,
-   rf.depth.SD, RF.err.propag, cols.num, date.end.month, dates, days, diffdays, RF.coll)
+   rf.depth.SD, RF.err.propag, cols.num, date.end.month, dates, days, diffdays, RF.coll, NO3data, NH4data)
+
+# Calculating output error propagation (= (dTF^2 + dSF^2)^0.5)
+library(plyr)
+dTF.err$variable = revalue(dTF.err$variable, c("dTF.NO3"="NO3", "dTF.NH4"="NH4"))
+dSF.err$variable = revalue(dSF.err$variable, c("dSF.NO3"="NO3", "dSF.NH4"="NH4"))
+
+dOutput.err= merge(dTF.err, dSF.err, by =  c("Ym","variable"))
+dOutput.err$value = ((dOutput.err$value.x)^2 + (dOutput.err$value.y)^2)^0.5
+dOutput.err = dOutput.err[, c(1,2,5)]
+dOutput.err$variable = revalue(dOutput.err$variable, c("NO3" = "dOUT.NO3", "NH4" = "dOUT.NH4"))
+
+dTF.err$variable = revalue(dTF.err$variable, c("NO3"="dTF.NO3", "NH4"="dTF.NH4")) # Back to former level names
+dSF.err$variable = revalue(dSF.err$variable, c("NO3"="dSF.NO3", "NH4"="dSF.NH4")) # Back to former level names
+
+# Calculating input error propagation (as (a^2+a^2)^0.5 = 1.41RF)
+
+dIN.error = dRF.err
+dIN.error$variable = revalue(dIN.error$variable, c("dRF.NO3" = "dIN.NO3", "dRF.NH4" = "dIN.NH4") )
+dIN.error$value = 2^0.5*dIN.error$value
+
+# Creating a long format error dataframe
+#long.N.error = rbind(dRF.err, dTF.err, dSF.err, dIN.error, dOutput.err)
+
