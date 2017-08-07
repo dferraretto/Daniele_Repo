@@ -15,7 +15,7 @@ rm(list=ls())
 setwd("C:/Users/s1373890/Daniele_Repo")
 
 library(readr)
-N_Ndep_15N_simplified <- read_csv("C:/Users/s1373890/Daniele_Repo/15N_experiment/15N_fieldlab/15N_Ndep_simplified.csv")
+N_Ndep_15N_simplified <- read_csv("C:/Users/s1373890/Daniele_Repo/15N_experiment/15N_fieldlab/15N_Ndep_simplified_15N_complete.csv")
 
 #### NOTE: all NH4 and NO3 have been cleaned by blanks in the .csv file  ########
 
@@ -80,7 +80,7 @@ SF15 = SF15[with(SF15, order(Date, Sample, tree)), ]
 # merge TF and SF
 TFSF.Nx = merge(TF15, SF15, by = c("Date", "variable", "tree"), all = FALSE)
 
-# SUBTRACTING CONTROLS IN ORDER TO TAKE INTO ACCOUNT
+# SUBTRACTING CONTROLS IN ORDER TO TAKE INTO ACCOUNT?
 
 
 # Scaling the masses to each tree canopy (https://stackoverflow.com/questions/29709248/multiplying-column-value-by-another-value-depending-on-value-in-certain-column-r)
@@ -111,8 +111,9 @@ winter.Nx = TFSF.Nx[TFSF.Nx$season == "winter",]
 require(data.table)
 summer.Nx <- data.table(summer.Nx)
 summer.Nx = summer.Nx[, Cum.Sum := cumsum(Nmass),by=list(N_form, tree)]
+
 winter.Nx <- data.table(winter.Nx)
-winter.Nx = winter.Nx[, Cum.Sum := cumsum(Nmass), by=list(N_form, tree)]
+winter.Nx = aggregate(Nmass ~ date + N_form + tree,  data = winter.Nx, FUN = mean)
 
 #rm(SF15, TF15, TF.2.remove, TFSF.15N.long, TFSF.15N, TFSF.Nx)
 
