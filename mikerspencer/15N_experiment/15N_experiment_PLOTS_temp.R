@@ -61,24 +61,28 @@ TFSF.15N = N_Ndep_15N_simplified[which(N_Ndep_15N_simplified$Sample == "T1" | N_
 # drop all but masses
 TFSF.15N = TFSF.15N[ , c(1,2,16,17)]
 
-#substring Samples to the code (1-2-3) of trees
-TFSF.15N$tree = substr(TFSF.15N$Sample, start=2, stop=2)
+#substring Samples to the code (1-2-3) of trees ma a checcazzo serve? Risposta: a mergiare piu sotto T1 e S1 che sono di un unico albero!!
+#TFSF.15N$tree = substr(TFSF.15N$Sample, start=2, stop=2)
 
 
 # sum N masses by tree:
 
 library(reshape2)
-TFSF.15N.long = melt(TFSF.15N, id.vars = c("Date", "Sample", "tree"))
+TFSF.15N.long = melt(TFSF.15N, id.vars = c("Date", "Sample"))
+TFSF.15N.long = aggregate(value ~ Date + Sample + variable, TFSF.15N.long, FUN = "mean") # to get rid of duplicate rows
+
+
 TF15 = TFSF.15N.long[which(TFSF.15N.long$Sample== "T1" | TFSF.15N.long$Sample== "T2" | TFSF.15N.long$Sample== "T3"), ]
 SF15 = TFSF.15N.long[which(TFSF.15N.long$Sample== "S1" | TFSF.15N.long$Sample== "S2" | TFSF.15N.long$Sample== "S3"), ]
+TF15$tree = substr(TF15$Sample, start=2, stop=2)
+SF15$tree = substr(SF15$Sample, start=2, stop=2)
 
-
-# order the 2 subsets by date and sample
+# order the 2 subsets by date, sample and tree
 TF15 = TF15[with(TF15, order(Date, Sample, tree)), ]
 SF15 = SF15[with(SF15, order(Date, Sample, tree)), ]
 
 # merge TF and SF
-TFSF.Nx = merge(TF15, SF15, by = c("Date", "variable", "tree"), all = FALSE)
+TFSF.Nx = merge(TF15, SF15, by = c("Date", "tree", "variable"), all = FALSE)
 
 # SUBTRACTING CONTROLS IN ORDER TO TAKE INTO ACCOUNT?
 
@@ -87,10 +91,7 @@ TFSF.Nx = merge(TF15, SF15, by = c("Date", "variable", "tree"), all = FALSE)
 TFSF.Nx = transform(TFSF.Nx, newvalue.x=ifelse(tree==1, value.x*T1.area / T1.TF.coll, 
                               ifelse(tree==2, value.x*T2.area / T2.TF.coll,
                               ifelse(tree==3, value.x*T3.area / T3.TF.coll, NA))))
-#TFSF.Nx = transform(TFSF.Nx, newvalue.y=ifelse(tree==1, value.y*T1.area / T1.TF.coll, 
-                            #  ifelse(tree==2, value.y*T2.area / T2.TF.coll,
-                            # ifelse(tree==3, value.y*T3.area / T3.TF.coll, NA)))) # huge conceptual mistake! I was scaling SF, but SF is 100% by definition!
-
+# SF is 100% by definition, no need to scale
 
 TFSF.Nx = TFSF.Nx[ , c(1:3,7,8)]
 names(TFSF.Nx) = c("date","N_form", "tree", "SF_N","TF_N")
