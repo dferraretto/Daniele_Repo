@@ -79,11 +79,12 @@ RFTF.error$variable = revalue(RFTF.error$variable, c("dRF.NO3" = "NO3.N.RF", "dR
 RFTF.error$value = RFTF.error$value/100
 
 N.RFTF.err = merge(N.RFTF, RFTF.error, by = c("mY", "variable"))
-names(N.inout.err) = c("mY", "variable", "mean", "month", "year", "err")
+names(N.RFTF.err) = c("mY", "variable", "mean", "month", "year", "err")
+N.RFTF.err = droplevels(N.RFTF.err) # there were unused levels (fog) messing with ggplot
 
 #N.inout$variable <- factor(N.inout$variable, levels = c("NO3.N.RFfog", "NH4.N.RFfog", "NO3.N.TF", "NH4.N.TF"))
 
-RFTF.err = ggplot(data = N.inout.err, aes (month, mean, fill = variable))
+RFTF.err = ggplot(data = N.RFTF.err, aes (month, mean, fill = variable))
 
 plot.RFTF = RFTF.err + 
   geom_bar(stat = "identity", position = position_dodge()) + 

@@ -94,7 +94,7 @@ TFSF.Nx = transform(TFSF.Nx, newvalue.x=ifelse(tree==1, value.x*T1.area / T1.TF.
 # SF is 100% by definition, no need to scale
 
 TFSF.Nx = TFSF.Nx[ , c(1:3,7,8)]
-names(TFSF.Nx) = c("date","N_form", "tree", "SF_N","TF_N")
+names(TFSF.Nx) = c("date", "tree", "N_form", "SF_N","TF_N")
 
 # overall N (TF+SF) by form
 TFSF.Nx$Nmass = TFSF.Nx$TF_N + TFSF.Nx$SF_N
@@ -130,8 +130,6 @@ long.N.RFTSW$mY = as.Date(long.N.RFTSW$mY)
 long.N.RFTSW = long.N.RFTSW[long.N.RFTSW$mY> "2016-07-01" & long.N.RFTSW$mY<"2017-01-01",]
 
 # %like requires data.table package
-library(data.table)
-
 N.in.summer <- long.N.RFTSW[long.N.RFTSW$variable %like% "input",]
 
 N.in.summer <- subset(N.in.summer, variable != "total.Ninput")
@@ -165,8 +163,8 @@ summer_application = summer_application [ , c(1,2,16,17)]
 summer_application$Sample <- factor(summer_application$Sample, labels = c(1,2,3))
 
 #wide to long
-library(reshape2)
 summer_application.long = melt(summer_application, id.vars = c("Date", "Sample"))
+
 #rename cols
 names(summer_application.long) = c("date", "tree",  "key","value")
 levels(summer_application.long$key) = c('NH4', 'NO3')
@@ -194,7 +192,6 @@ long.N.RFTSW$mY = as.Date(long.N.RFTSW$mY)
 long.N.RFTSW = long.N.RFTSW[long.N.RFTSW$mY> "2017-02-27" & long.N.RFTSW$mY < "2017-04-07",]
 
 # %like requires data.table package
-library(data.table)
 
 N.in.win <- long.N.RFTSW[long.N.RFTSW$variable %like% "input",]
 
@@ -232,9 +229,10 @@ winter_application$Sample <- factor(winter_application$Sample, labels = c(1,2,3)
 #  from Nx to Nx-N
 winter_application$NH4 = winter_application$NH4*14/18
 winter_application$NO3 = winter_application$NO3*14/62
+
 #wide to long
-library(reshape2)
 winter_application.long = melt(winter_application, id.vars = c("Date", "Sample"))
+
 #rename cols
 names(winter_application.long) = c("date", "tree",  "key","value")
 
@@ -258,60 +256,54 @@ N.input.winter = N.input.winter[, Cum.Sum := cumsum(value),by=list(tree,key)]
 ##################################################################
 
 
-# prepare the faceting factor for a parsed labelling
-N.inout <- long.N.RFTSW[c(long.N.RFTSW$variable %like% "input" |long.N.RFTSW$variable %like% "output") ,]
-
-N.inout <- subset(N.inout, variable != "total.Ninput")
-N.inout = droplevels(N.inout)
-N.inout$key = substr(N.inout$variable, start=1, stop=3)
-
-
-N.inout$key <- factor(N.inout$key, labels = c("NH[4]-N","NO[3]-N"))
-
-#  ctrl1 = ggplot(data = N.inout, aes (month, value, fill = variable)) + 
-    geom_bar(stat = "identity", position = "dodge") + 
-    scale_fill_manual(values = c("cadetblue4", "cadetblue2", "Dark Green", "Yellow Green"), name = "N flux \nand form", 
-                      labels = c(expression(~N[dep]~NH[4]*-N), expression(~N[dep]~NO[3]*-N), 
-                                 expression(~TF+SF~NH[4]*-N), expression(~TF+SF~NO[3]*-N))) +
-    facet_grid(key ~ ., labeller = label_parsed) + ggtitle(expression(~N[dep]*~"and N flux under the canopy")) +
-    labs( x = "Month", y = expression(N~flux~~"(kg N"~~ha^"-1"~month^"-1"*")")) + theme_bw(base_size = 11)+
-    theme(panel.border = element_blank(), plot.background = element_rect(fill = "transparent",colour = NA), 
-          plot.title = element_text(hjust = 0.5, size = 16, colour = 'red4')) 
-  
-  # Calculate a Control cumulative value to compare my new data
-  
-  N.inout$csum <- ave(N.inout$value, N.inout$variable, FUN=cumsum)
-  
-  # Plot'em!
-
-  #ctrl2 = ggplot(data = N.inout, aes (month, csum, fill = variable)) + 
-    geom_bar(stat = "identity", position = "dodge") + 
-    scale_fill_manual(values = c("cadetblue4", "cadetblue2", "Dark Green", "Yellow Green"), name = "N flux \nand form", 
-                      labels = c(expression(~N[dep]~NH[4]*-N), expression(~N[dep]~NO[3]*-N), 
-                                 expression(~TF+SF~NH[4]*-N), expression(~TF+SF~NO[3]*-N))) +
-    facet_grid(key ~ ., labeller = label_parsed) + ggtitle(expression("Cumulative"~N[dep]*~"and N content under the canopy")) +
-    labs( x = "Month", y = expression(Cumulative~N~flux~~"(kg N"~~ha^"-1"~month^"-1"*")")) + theme_bw(base_size = 11) +
-    theme(panel.border = element_blank(), plot.background = element_rect(fill = "transparent",colour = NA), 
-          plot.title = element_text(hjust = 0.5, size = 16, colour = 'red4')) 
-  
-
   ################################################################
   #   PLOT CUMULATED N MASS by APPLICATION AND collection date:
   ################################################################
   
-#extract the application N data
+# SUMMER CUMULATED N MASS
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# create a variable column to apply labels
 
-N_app = N_Ndep_15N_simplified[grep("T13T", N_Ndep_15N_simplified$Sample),c(1,2,4,5)]
-N_app$NH4.N = N_app$NH4*14/18
-N_app$NO3.N = N_app$NO3*14/62
-N_app =N_app[ , c(1,2,5,6)]
+N.input.summer$variable = NA
 
-library(reshape2)
-N_app_long <- melt(N_app, id.vars = c("Date", "Sample"))
-N_app_sum = N_app_long[N_app_long$Date == "2016-08-05", ]
-N_app_win = N_app_long[N_app_long$Date == "2017-02-28", ]
+N.input.summer = transform(N.input.summer, variable=ifelse(key=="NH4", "NH4.input", 
+                                                           ifelse(key=="NO3", "NO3.input", NA)))
+
+N.input.summer$key <- factor(N.input.summer$key, labels = c("NH[4]-N","NO[3]-N"))
+
+names(summer.Nx)[names(summer.Nx)=="N_form"] <- "key"
+
+summer.Nx$variable = NA
+
+#back to simple levels of key
+summer.Nx$key <- factor(summer.Nx$key, labels = c("NH4","NO3"))
+
+summer.Nx = transform(summer.Nx, variable=ifelse(key=="NH4", "NH4.output", 
+                                                 ifelse(key=="NO3", "NO3.output", NA)))
+
+summer.Nx$key <- factor(summer.Nx$key, labels = c("NH[4]-N","NO[3]-N"))
 
 
+
+plot.summer = ggplot() + 
+  geom_smooth(data = summer.Nx, aes (date, Cum.Sum, fill = variable, color = variable)) + 
+  geom_smooth(data = N.input.summer, aes (date, Cum.Sum, fill = variable, color = variable)) +
+  facet_grid(key ~ ., labeller = label_parsed) +
+  ggtitle("Cumulative N mass collected in throughfall \nand stemflow after the summer application") +
+  labs(x = "date", y = "cumulative N mass (mg/tree)") + theme_bw(base_size = 11) +
+  scale_fill_manual(values = c('NH4.output' = "olivedrab3",'NO3.output' = "seagreen4",'NH4.input' = "steelblue",'NO3.input' = "mediumblue"),
+                    labels = c('NH4.output' = expression(~~TF+SF~NH[4]*-N), 'NO3.output' = expression(~~TF+SF~NO[3]*-N), 
+                               'NH4.input' = expression(~N[dep]+Treatm.~NH[4]*-N), 'NO3.input' = expression(~~N[dep]+Treatm.~NO[3]*-N)), 
+                    name = "applied and \ncollected N \nby form") +
+  scale_color_manual(values = c('NH4.output' = "olivedrab3",'NO3.output' = "seagreen4",'NH4.input' = "steelblue",'NO3.input' = "mediumblue"),
+                     labels = c('NH4.output' = expression(~~TF+SF~NH[4]*-N), 'NO3.output' = expression(~~TF+SF~NO[3]*-N), 
+                                'NH4.input' = expression(~N[dep]+Treatm.~NH[4]*-N), 'NO3.input' = expression(~~N[dep]+Treatm.~NO[3]*-N)), 
+                     name = "applied and \ncollected N \nby form") +
+  theme(plot.title = element_text(hjust = 0.1, size = 16, colour = 'red4'),
+        plot.background = element_rect(fill = "transparent",colour = NA)) 
+
+# WINTER CUMULATED N MASS
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # create a variable column to apply labels
  
 N.input.winter$variable = NA
@@ -337,7 +329,7 @@ winter.Nx$key <- factor(winter.Nx$key, labels = c("NH[4]-N","NO[3]-N"))
 
 
 
- plot1 = ggplot() + 
+plot.winter = ggplot() + 
    geom_smooth(data = winter.Nx, aes (date, Cum.Sum, fill = variable, color = variable)) + 
    geom_smooth(data = N.input.winter, aes (date, Cum.Sum, fill = variable, color = variable)) +
    facet_grid(key ~ ., labeller = label_parsed) +
@@ -356,18 +348,12 @@ winter.Nx$key <- factor(winter.Nx$key, labels = c("NH[4]-N","NO[3]-N"))
          plot.background = element_rect(fill = "transparent",colour = NA)) 
  
    
-   # per aggiungere un text per ogni facet grid qui lo spiega meglio https://stackoverflow.com/questions/20428902/geom-text-writing-all-data-on-all-facets
- # ma comunque e' da farsi scoppiare la testa a cazzo, tanto vale creare la curva cumulata
+# per aggiungere un text per ogni facet grid qui lo spiega meglio https://stackoverflow.com/questions/20428902/geom-text-writing-all-data-on-all-facets
+# ma comunque e' da farsi scoppiare la testa a cazzo, tanto vale creare la curva cumulata
  
 
-ggplot(data = winter.Nx, aes (date, Cum.Sum)) + geom_smooth(color = 'midnightblue') + facet_grid(N_form ~ .) +
-    ggtitle("Cumulative N mass collected in throughfall \nand stemflow after the winter application") +
-  labs( x = "date", y = "cumulative N mass (mg/tree)") + theme_bw(base_size = 11) +
-  geom_hline(data = dummy2.0, aes(yintercept = Z), color = "red3", linetype = 3, size = 1) +
-  theme(plot.title = element_text(hjust = 0.1, size = 16, colour = 'midnightblue'),
-        plot.background = element_rect(fill = "transparent", colour = NA)) 
 
-rm(dummy1.0, dummy1.1, dummy1.2, dummy2.0, N_app, N_app_long,N_app_sum, N_app_win,
+rm(N_app, N_app_long,N_app_sum, N_app_win,
    T1.area, T1.TF.coll, T2.area, T2.TF.coll, T3.area, T3.TF.coll)
 
 # NOTES
@@ -403,7 +389,7 @@ long.d15N.TF.summer$key = substr(long.d15N.TF.summer$N_form, start=6, stop=8)
 #summer.Nx$key = substr(summer.Nx$N_form, start=1, stop=3)
 
 # box_plot with dates on the x axis (from https://stackoverflow.com/questions/20074061/ggplot2-multiple-factors-boxplot-with-scale-x-date-axis-in-r)
-long.d15N.TF.summer$Date <- as.Date(long.d15N.TF.summer$Date, format = "%d/%m/%Y")
+long.d15N.TF.summer$date <- as.Date(long.d15N.TF.summer$date, format = "%d/%m/%Y")
 
 #summer.Nx$key <- factor(summer.Nx$key, labels = c("NH[4]-N","NO[3]-N"))
 long.d15N.TF.summer$key <- factor(long.d15N.TF.summer$key, labels = c("NH[4]-N","NO[3]-N"))
@@ -411,14 +397,14 @@ long.d15N.TF.summer$key <- factor(long.d15N.TF.summer$key, labels = c("NH[4]-N",
 Edired.text <- element_text(face = "plain", color = "#DF0057")
 
 plot2 = ggplot() + 
-  geom_smooth(data = summer.Nx, aes(date, Nmass, fill = N_form)) + 
+  geom_smooth(data = summer.Nx, aes(date, Nmass, fill = key)) + 
   facet_grid(key ~ ., labeller = label_parsed) +
   geom_boxplot(data = long.d15N.TF.summer, aes(date, value, fill = N_form, group = interaction(factor(date), N_form, alpha = 0.5))) +
   scale_fill_manual(values = c('d15N_NH4' = "red4",'d15N_NO3' = "pink",'NH4.N' ="lightskyblue",'NO3.N' ="mediumblue"),
                     labels = c(expression(paste(~~~~delta^{15},NH[4]-N,~"in TF")), expression(paste(~~~~delta^{15},NO[3]-N,~"in TF")),
                                expression(~NH[4]*-N), expression(~NO[3]*-N)), 
                     name = "N form \nand isotope") +
-  ggtitle(expression(atop("N mass and"~paste(delta^{15},"N (\u2030) collected under"), paste("the canopy after the summer application")))) +
+  ggtitle(expression(atop("N collected and"~paste(delta^{15},"N (\u2030) signal under the canopy after the summer application")))) +
   labs( x = "date", y = "cumulative N mass (mg/tree)") + theme_bw(base_size = 11) +
   scale_y_continuous(sec.axis = sec_axis(~.*1, name = expression(paste(delta^{15},"N (\u2030)")))) +
   theme(axis.text.y.right = Edired.text, axis.title.y.right = Edired.text, 
@@ -462,7 +448,7 @@ plot2 = ggplot() +
                     labels = c(expression(paste(~~~~delta^{15},NH[4]-N,~"in TF")), expression(paste(~~~~delta^{15},NO[3]-N,~"in TF")),
                                expression(~NH[4]*-N), expression(~NO[3]*-N)), 
                     name = "N form \nand isotope") +
-  ggtitle(expression(atop("N mass and"~paste(delta^{15},"N (\u2030) collected under"), paste("the canopy after the winter application")))) +
+  ggtitle(expression(atop("N collected and"~paste(delta^{15},"N (\u2030) under the canopy after the winter application")))) +
   labs( x = "date", y = "cumulative N mass (mg/tree)") + theme_bw(base_size = 11) +
   scale_y_continuous(sec.axis = sec_axis(~.*1, name = expression(paste(delta^{15},"N (\u2030)")))) +
   theme(axis.text.y.right = Edired.text, axis.title.y.right = Edired.text, 

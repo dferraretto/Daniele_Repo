@@ -26,7 +26,17 @@ winter_rec_long = melt(winter_recovery, id.vars = c("Date", "Tree", "N_form", "1
 winter_rec_long$N15.rec = ((winter_rec_long$value*d+d)/1000 * winter_rec_long$N_rec)/winter_rec_long$`15N_applied`*100
 library(ggplot2)
 
-ggplot(winter_rec_long, aes(x = N_form, y = N15.rec)) + geom_boxplot()
+ggplot(winter_rec_long, aes(x = N_form, y = N15.rec)) + 
+  geom_boxplot(aes(fill = N_form)) +
+  theme(plot.title = element_text(hjust = 0.1, size = 16, colour = 'red4'),
+        plot.background = element_rect(fill = "transparent",colour = NA)) +
+  theme_bw(base_size = 11) +
+  scale_fill_manual(values = c('NH4-N' ="red4",'NO3-N' ="pink"),
+                    labels = c(expression(~NH[4]*-N), expression(~NO[3]*-N)), 
+                    name = "N form") +
+  ggtitle(expression({}^15*N~~recovered~"(%) in throughfall after the summer application")) + #DIOSTRACANEILCRISTO HOW TO START a title/label with superscript/subscript numbers: https://stackoverflow.com/questions/33783643/expression-of-italics-and-superscripts-in-ggpot-axis-title
+  labs( x = "N form", y = expression({}^15*N~~recovered~"(%)"))
+
 
 # WINTER ERROR PROPAGATION
 

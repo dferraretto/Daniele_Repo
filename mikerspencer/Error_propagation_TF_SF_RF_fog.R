@@ -11,7 +11,7 @@
 
 
 # clear the memory
-#rm(list=ls())
+ rm(list=ls())
 
 
 .libPaths("C:/Workspace/R") # adjust the issues with my desktop demmerda
@@ -22,6 +22,7 @@
 setwd("C:/Users/s1373890/Daniele_Repo")
 
 ##########          THROUGHFALL PROPAGATION ERROR          #############
+#                      by  SAMPLING DATE (1/2)
 
 # prima prova. 1) SD e mean per ogni sampling date, 
 # 2) poi valore giornaliero come errore prova/ numero giorni per giorni utili
@@ -32,27 +33,30 @@ library(RSQLite)
 
 db = dbConnect(SQLite(), dbname="field_lab/Griffin.SQLite")
 
-tf  = dbGetQuery(db, "SELECT * FROM fielddata WHERE variable = 'through depth' AND vals>=0 ORDER BY date")
+TF  = dbGetQuery(db, "SELECT * FROM fielddata WHERE variable = 'through depth' AND vals>=0 ORDER BY date")
 
 NO3data = dbGetQuery(db, "SELECT * FROM labdata WHERE VALS >= 0 AND variable = 'NO3.N' ORDER BY date")
 NH4data = dbGetQuery(db, "SELECT * FROM labdata WHERE VALS >= 0 AND variable = 'NH4.N' ORDER BY date")
 
 
-# 1: mean depth value by sampling date 
+# A1: mean depth value by sampling date 
 
-tf.depth.mean=aggregate(vals ~ date, data = tf, FUN = mean, na.rm = TRUE )
-names(tf.depth.mean) = c("date", "TF.depth.mean")
+TF.depth.mean=aggregate(vals ~ date, data = TF, FUN = mean, na.rm = TRUE )
+names(TF.depth.mean) = c("date", "TF.depth.mean")
 
-# 2: SD of depth value by sampling date
+# A2: SD of depth value by sampling date
 
-tf.depth.SD=aggregate(vals ~ date, data = tf, FUN = sd, na.rm = TRUE )
+TF.depth.SD=aggregate(vals ~ date, data = TF, FUN = sd, na.rm = TRUE )
 
-# 4a. 2SD
-#tf.depth.SD$vals = tf.depth.SD$vals * 2
+# A3: counting samples 
 
-names(tf.depth.SD) = c("date", "TF.depth.SD")
+TF.N = as.data.frame(table(TF$date))
 
+# A4. SE = SD/(N)^0.5. SE (95%) = 1.96*SE
+TF.SE.95 =  as.data.frame(1.96*TF.depth.SD$vals/(TF.N$Freq)^0.5)
 
+TF.SE.95 = cbind(TF.N$Var1, TF.SE.95)
+names(TF.SE.95) = c("date", "depth.SE.95")
 
 ##########              ERROR IN TF N LAB VALS                  #############
 
@@ -64,7 +68,7 @@ library(data.table)
 NO3.TF = NO3data[NO3data$sample %in% TF.coll, ]
 NH4.TF = NH4data[NH4data$sample %in% TF.coll, ]
 
-# 3: mean of lab values by sampling date
+# B1: mean of lab values by sampling date
 
 NO3.TF.mean = aggregate(vals ~ date, data = NO3.TF, FUN = mean, na.rm = TRUE )
 names(NO3.TF.mean) = c("date", "TF.NO3.mean")
@@ -72,7 +76,7 @@ NH4.TF.mean = aggregate(vals ~ date, data = NH4.TF, FUN = mean, na.rm = TRUE )
 names(NH4.TF.mean) = c("date", "TF.NH4.mean")
 
 
-#4: SD of lab values by sampling date
+# B2: SD of lab values by sampling date
 
 NO3.TF.SD = aggregate(vals ~ date, data = NO3.TF, FUN = sd, na.rm = TRUE )
 names(NO3.TF.SD) = c("date", "TF.NO3.SD")
@@ -80,25 +84,41 @@ names(NO3.TF.SD) = c("date", "TF.NO3.SD")
 NH4.TF.SD = aggregate(vals ~ date, data = NH4.TF, FUN = sd, na.rm = TRUE )
 names(NH4.TF.SD) = c("date", "TF.NH4.SD")
 
-# 5. Calculate the error per each sampling date: MULTIMERGE
+# B3: counting samples: 
+(library(plyr))
 
-dTF.samplingdate = merge(merge(merge(merge(merge(NO3.TF.mean, NO3.TF.SD, by='date', all=T), 
-                               NH4.TF.mean, by='date', all=T), NH4.TF.SD, by='date', all=T),
-                               tf.depth.mean, by='date', all=T),tf.depth.SD, by='date', all=T)
+NO3.TF.N = as.data.frame(table(NO3.TF$date))
+
+NH4.TF.N = as.data.frame(table(NH4.TF$date))
+
+
+# B4. SE = SD/(N)^0.5. SE (95%) = 1.96*SE
+TFNO3.SE.95 =  as.data.frame(1.96*NO3.TF.SD$TF.NO3.SD/(NO3.TF.N$Freq)^0.5)
+TFNH4.SE.95 =  as.data.frame(1.96*NH4.TF.SD$TF.NH4.SD/(NH4.TF.N$Freq)^0.5)
+
+
+TFLAB.SE.95 = cbind(NO3.TF.N$Var1, TFNO3.SE.95, TFNH4.SE.95)
+names(TFLAB.SE.95) = c("date", "SE.95.NO3", "SE.95.NH4")
+
+
+# B5. Calculate the error per each sampling date: MULTIMERGE
+
+dTF.samplingdate = merge(merge(merge(merge(NO3.TF.mean, TF.SE.95, by='date', all=T), 
+                               NH4.TF.mean, by='date', all=T), TF.depth.mean, by='date', all=T), TFLAB.SE.95, by='date', all=T)
 
 # 5a: Error propagation on NO3.N in TF by sampling date:
 dTF.samplingdate$dTF.NO3 = dTF.samplingdate$TF.depth.mean * dTF.samplingdate$TF.NO3.mean *
-  ((dTF.samplingdate$TF.NO3.SD/dTF.samplingdate$TF.NO3.mean)^2+(dTF.samplingdate$TF.depth.SD/dTF.samplingdate$TF.depth.mean)^2)^0.5
+  ((dTF.samplingdate$SE.95.NO3/dTF.samplingdate$TF.NO3.mean)^2+(dTF.samplingdate$depth.SE.95/dTF.samplingdate$TF.depth.mean)^2)^0.5
 
 
 # 5b: Error propagation on NH4.N in TF by sampling date:
 dTF.samplingdate$dTF.NH4 = dTF.samplingdate$TF.depth.mean * dTF.samplingdate$TF.NH4.mean *
-  ((dTF.samplingdate$TF.NH4.SD/dTF.samplingdate$TF.NH4.mean)^2+(dTF.samplingdate$TF.depth.SD/dTF.samplingdate$TF.depth.mean)^2)^0.5
+  ((dTF.samplingdate$SE.95.NH4/dTF.samplingdate$TF.NH4.mean)^2+(dTF.samplingdate$depth.SE.95/dTF.samplingdate$TF.depth.mean)^2)^0.5
 
 
 #####################################################################################
 #########   REFINING ERROR PROPAGATION in TF: ERROR PROPAGATION BY MONTH   ##########
-
+#                                      (2/2)
 # Rationale: working on partial errors weighed by the number of days of each month
 # covered by the n sampling date needs to 1) calculate how many days of each sampling date fall in a month;
 # 2. calculate the weighed error; 3. propagation error as sum of the weighed errors
@@ -137,23 +157,20 @@ dTF.samplingdate1$Ym = strftime(dTF.samplingdate1$date, "%Y%m")
 library(Hmisc)
 dTF.samplingdate1$daysxmonth = monthDays(as.Date(dTF.samplingdate1$date))
 
-# remove the last row
-dTF.samplingdate1 = head(dTF.samplingdate1, -1)
-
 dTF.samplingdate1$days = as.numeric(dTF.samplingdate1$days)
-cols.num <- c("TF.NO3.mean","TF.NO3.SD","TF.NH4.mean", "TF.NH4.SD","TF.depth.mean", "TF.depth.SD", "days")
+cols.num <- c("TF.NO3.mean","SE.95.NO3","TF.NH4.mean", "SE.95.NH4","TF.depth.mean", "depth.SE.95", "days")
 dTF.samplingdate1[cols.num] <- sapply(dTF.samplingdate1[cols.num],as.numeric)
 summary(dTF.samplingdate1)
 
-# 2a: Error propagation on NO3.N in TF:
+# 2A: Error propagation on NO3.N in TF:
 dTF.samplingdate1$dTF.NO3 = dTF.samplingdate1$TF.depth.mean * dTF.samplingdate1$TF.NO3.mean *
-  ((dTF.samplingdate1$TF.NO3.SD/dTF.samplingdate1$TF.NO3.mean)^2+(dTF.samplingdate1$TF.depth.SD/dTF.samplingdate1$TF.depth.mean)^2)^0.5 *
+  ((dTF.samplingdate1$SE.95.NO3/dTF.samplingdate1$TF.NO3.mean)^2+(dTF.samplingdate1$depth.SE.95/dTF.samplingdate1$TF.depth.mean)^2)^0.5 *
   dTF.samplingdate1$days/dTF.samplingdate1$daysxmonth
 
 
-# 2b: Error propagation on NH4.N in TF:
+# 2B: Error propagation on NH4.N in TF:
 dTF.samplingdate1$dTF.NH4 = dTF.samplingdate1$TF.depth.mean * dTF.samplingdate1$TF.NH4.mean *
-  ((dTF.samplingdate1$TF.NH4.SD/dTF.samplingdate1$TF.NH4.mean)^2+(dTF.samplingdate1$TF.depth.SD/dTF.samplingdate1$TF.depth.mean)^2)^0.5 *
+  ((dTF.samplingdate1$SE.95.NH4/dTF.samplingdate1$TF.NH4.mean)^2+(dTF.samplingdate1$depth.SE.95/dTF.samplingdate1$TF.depth.mean)^2)^0.5 *
   dTF.samplingdate1$days/dTF.samplingdate1$daysxmonth
 
 # 3. PROPAGATION ERROR AS SUM OF ERRORS FROM DIFFERENT SAMPLING DATES
@@ -169,8 +186,8 @@ names(dTF.err) = c("Ym", "variable", "value")
 dTF.err$value= (dTF.err$value)^0.5
 
 #housekeeping
-rm(dates2, dd.dates, dTF.samplingdate, dTF.samplingdate1, NH4.TF, NH4.TF.mean, NH4.TF.SD, NO3.TF, NO3.TF.mean, NO3.TF.SD, tf, tf.depth.mean,
-   tf.depth.SD, TF.err.propag, cols.num, date.end.month, dates, days, diffdays, TF.coll)
+rm(NH4.TF.N, NO3.TF.N, TF.N, TF.SE.95, TFLAB.SE.95, TFNH4.SE.95, TFNO3.SE.95, dates2, dd.dates, dTF.samplingdate, dTF.samplingdate1, NH4.TF, NH4.TF.mean, NH4.TF.SD, NO3.TF, NO3.TF.mean, NO3.TF.SD, TF, 
+   TF.depth.mean, TF.depth.SD, TF.err.propag, cols.num, date.end.month, dates, days, diffdays, TF.coll)
 ##############################################################################
 
 ############            STEMFLOW PROPAGATION ERROR             ###############
@@ -182,28 +199,30 @@ rm(dates2, dd.dates, dTF.samplingdate, dTF.samplingdate1, NH4.TF, NH4.TF.mean, N
 ##########                    ERROR IN SF vol                    #############
 
 
-library(RSQLite)
-
-db = dbConnect(SQLite(), dbname="field_lab/Griffin.SQLite")
-
-sf  = dbGetQuery(db, "SELECT * FROM fielddata WHERE variable = 'stem vol' AND vals>=0 ORDER BY date")
+SF  = dbGetQuery(db, "SELECT * FROM fielddata WHERE variable = 'stem vol' AND vals>=0 ORDER BY date")
 
 
-# 1: mean vol value by sampling date 
+# A1: mean vol value by sampling date 
 
-sf.vol.mean=aggregate(vals ~ date, data = sf, FUN = mean, na.rm = TRUE )
-names(sf.vol.mean) = c("date", "SF.depth.mean")
+SF.vol.mean=aggregate(vals ~ date, data = SF, FUN = mean, na.rm = TRUE )
+names(SF.vol.mean) = c("date", "SF.vol.mean")
 
-# 2: SD of depth value by sampling date
+# A2: SD of depth value by sampling date
 
-sf.vol.SD=aggregate(vals ~ date, data = sf, FUN = sd, na.rm = TRUE )
+SF.vol.SD=aggregate(vals ~ date, data = SF, FUN = sd, na.rm = TRUE )
 
-# 4a. 2SD
-#sf.vol.SD$vals = sf.vol.SD$vals * 2
+# A3: counting samples 
 
-names(sf.vol.SD) = c("date", "SF.depth.SD")
+SF.N = as.data.frame(table(SF$date))
 
-##########              ERROR IN TF N LAB VALS                  #############
+# A4. SE = SD/(N)^0.5. SE (95%) = 1.96*SE
+SF.SE.95 =  as.data.frame(1.96*SF.vol.SD$vals/(SF.N$Freq)^0.5)
+
+SF.SE.95 = cbind(SF.N$Var1, SF.SE.95)
+names(SF.SE.95) = c("date", "depth.SE.95")
+
+
+##########              ERROR IN SF N LAB VALS                  #############
 
 SF.coll = c("C10S1", "C10S2", "C10S3", "C11S1", "C11S2", "C11S3", "C12S1", "C12S2", "C12S3", "T10S1", 
             "T10S2", "T10S3", "T11S1", "T11S2", "T11S3", "T11S4", "T11S5", "T11S6", "T11S7", "T12S1", "T12S2", "T12S3")
@@ -213,7 +232,7 @@ library(data.table)
 NO3.SF = NO3data[NO3data$sample %in% SF.coll, ]
 NH4.SF = NH4data[NH4data$sample %in% SF.coll, ]
 
-# 3: mean of lab values by sampling date
+# B1: mean of lab values by sampling date
 
 NO3.SF.mean = aggregate(vals ~ date, data = NO3.SF, FUN = mean, na.rm = TRUE )
 names(NO3.SF.mean) = c("date", "SF.NO3.mean")
@@ -221,7 +240,7 @@ NH4.SF.mean = aggregate(vals ~ date, data = NH4.SF, FUN = mean, na.rm = TRUE )
 names(NH4.SF.mean) = c("date", "SF.NH4.mean")
 
 
-#4: SD of lab values by sampling date
+# B2: SD of lab values by sampling date
 
 NO3.SF.SD = aggregate(vals ~ date, data = NO3.SF, FUN = sd, na.rm = TRUE )
 
@@ -230,23 +249,35 @@ names(NO3.SF.SD) = c("date", "SF.NO3.SD")
 NH4.SF.SD = aggregate(vals ~ date, data = NH4.SF, FUN = sd, na.rm = TRUE )
 names(NH4.SF.SD) = c("date", "SF.NH4.SD")
 
-# 5. Calculate the error per each sampling date: MULTIMERGE
+# B3: counting samples: 
 
-dSF.samplingdate = merge(merge(merge(merge(merge(NO3.SF.mean, NO3.SF.SD, by='date', all=T), 
-                                           NH4.SF.mean, by='date', all=T), NH4.SF.SD, by='date', all=T),
-                               sf.vol.mean, by='date', all=T),sf.vol.SD, by='date', all=T)
+NO3.SF.N = as.data.frame(table(NO3.SF$date))
+
+NH4.SF.N = as.data.frame(table(NH4.SF$date))
+
+
+# B4. SE = SD/(N)^0.5. SE (95%) = 1.96*SE
+SFNO3.SE.95 =  as.data.frame(1.96*NO3.SF.SD$SF.NO3.SD/(NO3.SF.N$Freq)^0.5)
+SFNH4.SE.95 =  as.data.frame(1.96*NH4.SF.SD$SF.NH4.SD/(NH4.SF.N$Freq)^0.5)
+
+
+SFLAB.SE.95 = cbind(NO3.SF.N$Var1, SFNO3.SE.95, SFNH4.SE.95)
+names(SFLAB.SE.95) = c("date", "SE.95.NO3", "SE.95.NH4")
+
+
+# B5. Calculate the error per each sampling date: MULTIMERGE
+
+dSF.samplingdate = merge(merge(merge(merge(SF.vol.mean, SF.SE.95, by='date', all=T), 
+                                     NH4.SF.mean, by='date', all=T), NO3.SF.mean, by='date', all=T), SFLAB.SE.95, by='date', all=T)
 
 # 5a: Error propagation on NO3.N in TF by sampling date:
-dSF.samplingdate$dSF.NO3 = dSF.samplingdate$SF.depth.mean * dSF.samplingdate$SF.NO3.mean *
-  ((dSF.samplingdate$SF.NO3.SD/dSF.samplingdate$SF.NO3.mean)^2+(dSF.samplingdate$SF.depth.SD/dSF.samplingdate$SF.depth.mean)^2)^0.5
+dSF.samplingdate$dSF.NO3 = dSF.samplingdate$SF.vol.mean * dSF.samplingdate$SF.NO3.mean *
+  ((dSF.samplingdate$SE.95.NO3/dSF.samplingdate$SF.NO3.mean)^2+(dSF.samplingdate$depth.SE.95/dSF.samplingdate$SF.vol.mean)^2)^0.5
 
 
 # 5b: Error propagation on NH4.N in SF by sampling date:
-dSF.samplingdate$dSF.NH4 = dSF.samplingdate$SF.depth.mean * dSF.samplingdate$SF.NH4.mean *
-  ((dSF.samplingdate$SF.NH4.SD/dSF.samplingdate$SF.NH4.mean)^2+(dSF.samplingdate$SF.depth.SD/dSF.samplingdate$SF.depth.mean)^2)^0.5
-
-# correct NaN to 0 (after a check to lab values, all = 0)
-# dSF.samplingdate[19, "dSF.NO3"] = 0 # per ora no, non mi piace come soluzione, forse meglio ignorare l'errore proprio
+dSF.samplingdate$dSF.NH4 = dSF.samplingdate$SF.vol.mean * dSF.samplingdate$SF.NH4.mean *
+  ((dSF.samplingdate$SE.95.NH4/dSF.samplingdate$SF.NH4.mean)^2+(dSF.samplingdate$depth.SE.95/dSF.samplingdate$SF.vol.mean)^2)^0.5
 
 ###############################################################################
 #########   REFINING ERROR PROPAGATION: ERROR PROPAGATION BY MONTH   ##########
@@ -288,16 +319,24 @@ dSF.samplingdate1$Ym = strftime(dSF.samplingdate1$date, "%Y%m")
 library(Hmisc)
 dSF.samplingdate1$daysxmonth = monthDays(as.Date(dSF.samplingdate1$date))
 
-# remove the last row
-dSF.samplingdate1 = head(dSF.samplingdate1, -1)
 
 dSF.samplingdate1$days = as.numeric(dSF.samplingdate1$days)
-cols.num <- c("SF.NO3.mean","SF.NO3.SD","SF.NH4.mean", "SF.NH4.SD","SF.depth.mean", "SF.depth.SD", "days")
+cols.num <- c("SF.NO3.mean","SE.95.NO3","SF.NH4.mean", "SE.95.NH4","SF.vol.mean", "depth.SE.95", "days")
 dSF.samplingdate1[cols.num] <- sapply(dSF.samplingdate1[cols.num],as.numeric)
 
+
+# BAAAAASTA PORCO DIO. HO UNA TESTA COSI DIO CAN. E DIO PORCO. HO FATTO DUE VOLTE LA STESSA MERDA? NON HO PIU TESTA
+# DIO PORCO PORCO DIO. TF MI SEMBRA SEGUA UNA LOGICA DI FERRO, QUI MI SEMBRA DI RIFARE LA STESSA CAZZO DI COSA DUE VOLTE.
+# PERCHE DIO PORCHISSIMO STO CALCOLANDO L'ERRORE QUI SOTTO PARTENDO DI NUOVO DAI DATI ORIGINARI DIO CAN? E ALLORA A CHE CAZZO
+# SERVIVA CHE CALCOLASSI LERRORE PRIMA MADONNA STRAPUTTANA? MA PORCO DI QUEL CRISTO CROCIFISSO STRAPUTTANA LA MADONNA DIO QUEL
+# CAZZO DI GESU INCROCE. DELLE DUE UNA: O ELIMINO IL CALCOLO DELL'ERRORE DI PRIMA CHE E' TEMPO SPRECATO, O CON QUELL'ERRORE CALCOLO
+# L'ERRORE SULL'ERRORE DELL'ERRORE CON LERRORE DI QUEL PORCO DEL SIGNORE.
+# SI DIO CAN, HO GUARDATO TF. NON STA COPIARLO EH DIO PORCO? COPIALO SUL UNO SCRIPT PULITO DIOPORCODIO BIFRONTE, E SOSTITUISCI
+# SOLO I CODICI TF/SF. AMEN.
+
 # 2a: Error propagation on NO3.N in SF:
-dSF.samplingdate1$dSF.NO3 = dSF.samplingdate1$SF.depth.mean * dSF.samplingdate1$SF.NO3.mean *
-  ((dSF.samplingdate1$SF.NO3.SD/dSF.samplingdate1$SF.NO3.mean)^2+(dSF.samplingdate1$SF.depth.SD/dSF.samplingdate1$SF.depth.mean)^2)^0.5 *
+dSF.samplingdate1$dSF.NO3 = dSF.samplingdate1$SF.vol.mean * dSF.samplingdate1$SF.NO3.mean *
+  ((dSF.samplingdate1$SE.95.NO3/dSF.samplingdate1$SF.NO3.mean)^2+(dSF.samplingdate1$SF.vol.SD/dSF.samplingdate1$SF.vol.mean)^2)^0.5 *
   dSF.samplingdate1$days/dSF.samplingdate1$daysxmonth
 
 
