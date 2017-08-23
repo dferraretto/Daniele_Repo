@@ -13,5 +13,5 @@ Files for reading raw field and lab data and writing to an SQLite database.
 * **Trays.R** Finds median tray mass over 9 months and writes to csv. The results are now in the data template.
 * **Outliers_Aug2016 It detects potential outliers. Run it and accept the removal only for the two vals from fieldwork prec (see script). 
 * **Outliers.R** to be run after Handover.R, corrects Outliers previously detected by  Outliers_Aug2016 (row ID has shown to be a bad key to remove lines, changed for a multiple conditions on columns
-* **fog_C30D1_regression ultimately corrects OF, QC and other not acceptable (negative) fog values with predictions of a regression
+* **fog_C30D1_regression_and_interpolation ultimately corrects OF, QC and other not acceptable (negative) fog values with predictions of a regression
 

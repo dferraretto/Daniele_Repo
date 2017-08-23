@@ -120,7 +120,7 @@ labdata$vals[labdata$date == '2015-07-21' & labdata$sample == 'C31D1' & labdata$
 labdata$vals[labdata$date == '2013-10-03' & labdata$sample == 'C31D1' & labdata$variable == 'NH4.N'] = NA
 labdata$vals[labdata$date == '2016-06-22' & labdata$sample == 'C31D1' & labdata$variable == 'NH4.N'] = NA
 labdata$vals[labdata$date == '2016-07-25' & labdata$sample == 'C30D1' & labdata$variable == 'NH4.N'] = NA
-labdata$vals[labdata$date == '2016-07-25' & labdata$sample == 'C31D1' & labdata$variable == 'NH4.N'] = NA
+#labdata$vals[labdata$date == '2016-07-25' & labdata$sample == 'C31D1' & labdata$variable == 'NH4.N'] = NA ASSOLUTAMENTE NO! E' UN VALORE ACCETTABILE CAZZO!
 # TEMP! LATER TO BE OBTAINED BY INVERSE REGRESSION FROM C30D2
 
 # THIS WAS A THRESHOLD OUTLIER,
