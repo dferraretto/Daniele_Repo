@@ -507,3 +507,13 @@ dRF.err$value= (dRF.err$value)^0.5 # square root to calculate the error propagat
 rm(dates2, dd.dates, dRF.samplingdate, dRF.samplingdate1, NH4.RF, NH4.RF.mean, NH4.RF.SD, NO3.RF, NO3.RF.mean,
    NO3.RF.SD, RF, RF.depth.mean, NH4.RF.N, NO3.RF.N, RF.SE.95, RFLAB.SE.95, RFNH4.SE.95, RFNO3.SE.95, RF.N,
    RF.depth.SD, RF.err.propag, cols.num, date.end.month, dates, days, diffdays, RF.coll, NO3data, NH4data)
+
+### Creating input and output errors (input as 1.41RF, cioe' come se l'errore di fog fosse dello stesso ordine di grandezza
+# di RF)
+dIN.err = dRF.err
+dIN.err$variable = "dIN.err"
+dIN.err$value = dIN.err$value * (2^0.5)
+N.error$dIN.error = N.error$dTF.err
+
+dOUT.err = dTF.err
+dOUT.err$value = ((dOUT.err$value)^2+(dSF.err$value)^2)^0.5

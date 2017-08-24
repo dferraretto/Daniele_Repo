@@ -362,6 +362,8 @@ labdata = dbGetQuery(db, "SELECT * FROM labdata ORDER BY date")
 
 # OCCHISSIMO QUI ALLA STRUTTURA DI 
 w = merge(labdata, predictedNH4.C30D1, by.x = c("date", "sample", "variable"), by.y = c("date", "sample", "variable"), all.x = TRUE, all.y = TRUE)
+#get rid of the 01/12/2011 value for C30D1 (non existing, created by the regression and messing with the error propagation script)
+w$lwr[w$date=="2011-12-01"&w$sample=="C30D1"]=NA
 
 # https://stackoverflow.com/questions/15629885/replace-na-in-column-with-value-in-adjacent-column
 w$vals[is.na(w$vals)] <- w$lwr[is.na(w$vals)]
