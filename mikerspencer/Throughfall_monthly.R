@@ -26,7 +26,7 @@ tf.m.vol = aggregate (vals ~ mY, data = tf.vol.dd, FUN = sum)
 
 # STEP 1: merge depth and concentration, clean the merged file
 TF.NO3=merge(tf,NO3data,by.x=c("date","sample"), by.y=c("date","sample"))
-TF.NO3$NO3.N=TF.NO3$vals.x*TF.NO3$vals.y*10000/1000000 # turns to a g/ha value
+TF.NO3$NO3.N=TF.NO3$vals.x*TF.NO3$vals.y*10000/1000000 # turns to a kg/ha value
 
 # in case I need q/Q controls here is where to operate
 TF.NO3=TF.NO3[,c("date","sample","site.x","variable.x","NO3.N")] 

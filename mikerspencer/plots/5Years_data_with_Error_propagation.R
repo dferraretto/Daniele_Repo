@@ -31,7 +31,7 @@ N.inout <- subset(N.inout, variable != "total.Ninput")
 N.inout = droplevels(N.inout)
 
 # creating a INOUT.error dataframe
-INOUT.error = rbind(dIN.error, dOutput.err)
+INOUT.error = rbind(dIN.err, dOUT.err)
 
 INOUT.error = transform(INOUT.error, Ym = as.yearmon(as.character(Ym), "%Y%m"))
 
@@ -39,8 +39,6 @@ colnames(INOUT.error)[1] = "mY"
 
 INOUT.error$variable = revalue(INOUT.error$variable, c("dIN.NO3" = "NO3.N.input", "dIN.NH4" = "NH4.N.input", 
                                                        "dOUT.NO3" = "NO3.output", "dOUT.NH4" = "NH4.output")) # Back to former level names
-# turn mg/m2 into Kg/ha:
-INOUT.error$value = INOUT.error$value/100
 
 N.inout.err = merge(N.inout, INOUT.error, by = c("mY", "variable"))
 names(N.inout.err) = c("mY", "variable", "mean", "month", "year", "err")

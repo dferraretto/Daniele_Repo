@@ -42,6 +42,7 @@ NH4data = dbGetQuery(db, "SELECT * FROM labdata WHERE VALS >= 0 AND variable = '
 # A1: MEAN depth value by sampling date 
 
 TF.depth.mean=aggregate(vals ~ date, data = TF, FUN = mean, na.rm = TRUE )
+
 names(TF.depth.mean) = c("date", "TF.depth.mean")
 
 # A2: SD of depth value by sampling date
@@ -107,13 +108,13 @@ names(TFLAB.SE.95) = c("date", "SE.95.NO3", "SE.95.NH4")
 dTF.samplingdate = merge(merge(merge(merge(NO3.TF.mean, TF.SE.95, by='date', all=T), 
                                NH4.TF.mean, by='date', all=T), TF.depth.mean, by='date', all=T), TFLAB.SE.95, by='date', all=T)
 
-# 5a: Error propagation on NO3.N in TF by sampling date:
-dTF.samplingdate$dTF.NO3 = dTF.samplingdate$TF.depth.mean * dTF.samplingdate$TF.NO3.mean *
+# 5a: Error propagation on NO3.N in TF by sampling date (and turning it from mg/m2 to kg/ha):
+dTF.samplingdate$dTF.NO3 = (10000/1000000) * dTF.samplingdate$TF.depth.mean * dTF.samplingdate$TF.NO3.mean *
   ((dTF.samplingdate$SE.95.NO3/dTF.samplingdate$TF.NO3.mean)^2+(dTF.samplingdate$depth.SE.95/dTF.samplingdate$TF.depth.mean)^2)^0.5
 
 
 # 5b: Error propagation on NH4.N in TF by sampling date:
-dTF.samplingdate$dTF.NH4 = dTF.samplingdate$TF.depth.mean * dTF.samplingdate$TF.NH4.mean *
+dTF.samplingdate$dTF.NH4 = (10000/1000000) * dTF.samplingdate$TF.depth.mean * dTF.samplingdate$TF.NH4.mean *
   ((dTF.samplingdate$SE.95.NH4/dTF.samplingdate$TF.NH4.mean)^2+(dTF.samplingdate$depth.SE.95/dTF.samplingdate$TF.depth.mean)^2)^0.5
 
 
@@ -271,12 +272,12 @@ dSF.samplingdate = merge(merge(merge(merge(SF.vol.mean, SF.SE.95, by='date', all
                          SFLAB.SE.95, by='date', all=T) # this last is the sum of the two Nx lab.SE
 
 # B5a: Error propagation on NO3.N in TF by sampling date:
-dSF.samplingdate$dSF.NO3 = dSF.samplingdate$SF.vol.mean * dSF.samplingdate$SF.NO3.mean *
+dSF.samplingdate$dSF.NO3 = (1883/1000000) * dSF.samplingdate$SF.vol.mean * dSF.samplingdate$SF.NO3.mean *
   ((dSF.samplingdate$SE.95.NO3/dSF.samplingdate$SF.NO3.mean)^2+(dSF.samplingdate$vol.SE.95/dSF.samplingdate$SF.vol.mean)^2)^0.5
 
 
 # B5b: Error propagation on NH4.N in SF by sampling date:
-dSF.samplingdate$dSF.NH4 = dSF.samplingdate$SF.vol.mean * dSF.samplingdate$SF.NH4.mean *
+dSF.samplingdate$dSF.NH4 = (1883/1000000) * dSF.samplingdate$SF.vol.mean * dSF.samplingdate$SF.NH4.mean *
   ((dSF.samplingdate$SE.95.NH4/dSF.samplingdate$SF.NH4.mean)^2+(dSF.samplingdate$vol.SE.95/dSF.samplingdate$SF.vol.mean)^2)^0.5
 
 ###############################################################################
@@ -425,12 +426,12 @@ dRF.samplingdate = merge(merge(merge(merge(NO3.RF.mean, RF.SE.95, by='date', all
                                      NH4.RF.mean, by='date', all=T), RF.depth.mean, by='date', all=T), RFLAB.SE.95, by='date', all=T)
 
 # 5a: Error propagation on NO3.N in RF by sampling date:
-dRF.samplingdate$dRF.NO3 = dRF.samplingdate$RF.depth.mean * dRF.samplingdate$RF.NO3.mean *
+dRF.samplingdate$dRF.NO3 = (10000/1000000) * dRF.samplingdate$RF.depth.mean * dRF.samplingdate$RF.NO3.mean *
   ((dRF.samplingdate$SE.95.NO3/dRF.samplingdate$RF.NO3.mean)^2+(dRF.samplingdate$depth.SE.95/dRF.samplingdate$RF.depth.mean)^2)^0.5
 
 
 # 5b: Error propagation on NH4.N in RF by sampling date:
-dRF.samplingdate$dRF.NH4 = dRF.samplingdate$RF.depth.mean * dRF.samplingdate$RF.NH4.mean *
+dRF.samplingdate$dRF.NH4 = (10000/1000000) * dRF.samplingdate$RF.depth.mean * dRF.samplingdate$RF.NH4.mean *
   ((dRF.samplingdate$SE.95.NH4/dRF.samplingdate$RF.NH4.mean)^2+(dRF.samplingdate$depth.SE.95/dRF.samplingdate$RF.depth.mean)^2)^0.5
 
 
@@ -510,10 +511,19 @@ rm(dates2, dd.dates, dRF.samplingdate, dRF.samplingdate1, NH4.RF, NH4.RF.mean, N
 
 ### Creating input and output errors (input as 1.41RF, cioe' come se l'errore di fog fosse dello stesso ordine di grandezza
 # di RF)
+
 dIN.err = dRF.err
-dIN.err$variable = "dIN.err"
+dIN.err$variable = revalue(dRF.err$variable, c("dRF.NH4"="dIN.NH4", "dRF.NO3"="dIN.NO3"))
 dIN.err$value = dIN.err$value * (2^0.5)
-N.error$dIN.error = N.error$dTF.err
 
 dOUT.err = dTF.err
+dOUT.err$variable = revalue(dOUT.err$variable, c("dTF.NH4"="dOUT.NH4", "dTF.NO3"="dOUT.NO3"))
 dOUT.err$value = ((dOUT.err$value)^2+(dSF.err$value)^2)^0.5
+
+# Creating long.N.error
+
+long.N.error = rbind(dRF.err, dTF.err, dSF.err, dIN.err, dOUT.err)
+
+long.N.error = transform(long.N.error, Ym = as.yearmon(as.character(Ym), "%Y%m"))
+long.N.error$month = format(long.N.error$mY, "%m")
+long.N.error$year = format(long.N.error$mY, "%Y")
