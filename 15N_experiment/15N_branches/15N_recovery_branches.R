@@ -34,8 +34,44 @@ branch_15N_wider = dcast(setDT(branch_15N), branch + compartment  ~ T_C, value.v
 
 
 # 15N recovery in BRANCHES per compartment, %: (see 15N formula explained.doc, adapted)
+# 15Nsample = (cd+d)/1000/(1+(cd+d)/1000)   15Nexcess
+
 branch_15N_wider$N15.rec = (((branch_15N_wider$d15N_T-branch_15N_wider$d15N_C)*d+d)/1000)/ 
-  (1+((branch_15N_wider$d15N_T-branch_15N_wider$d15N_C)*d+d)/1000) * 100 * 100 * # = 15Nexcess perc; the 2nd perc applies to the recovery formula
-  (branch_15N_wider$Total_N_perc_T * branch_15N_wider$DM_by_length_T)/ app # = N/applied 15N
+  (1+((branch_15N_wider$d15N_T-branch_15N_wider$d15N_C)*d+d)/1000) * # = 15Nexcess perc
+  (branch_15N_wider$Total_N_perc_T * branch_15N_wider$DM_by_length_T)*1000*100/ app # = N/applied 15N; 1000 e' per convertire i g DM in mg!, 100 da formula
 
 total.15N.rec = aggregate(N15.rec ~ branch, branch_15N_wider, FUN = sum)
+
+d15N.mean = aggregate(d15N_T ~ compartment, branch_15N_wider, FUN = mean)
+mean.15N.rec = aggregate(N15.rec ~ compartment, branch_15N_wider, FUN = mean)
+branch_15N_wider$d15N.exc = branch_15N_wider$d15N_T-branch_15N_wider$d15N_C
+
+#######             PLOTS             ##############
+
+# By Compartment:
+
+## Total N %
+ggplot(branch_15N_wider, aes(x=compartment, y=Total_N_perc_T, fill=compartment))+
+  geom_boxplot() + ggtitle("N (% on DM)")  + theme_bw(base_size = 12) +
+  theme(plot.title = element_text(hjust = 0.5)) +  guides(fill=FALSE) +
+    labs(x = 'comparment', y = "N (%)") +
+  scale_x_discrete(labels = c('new leaves','new twigs','old leaves', 'old twigs')) #theme_bw va prima di theme o fotte hjust e compagnia briscola
+
+# d15N excess N
+ggplot(branch_15N_wider, aes(x=compartment, y=d15N.exc, fill=compartment))+
+  geom_boxplot() + theme_bw(base_size = 12) + theme(plot.title = element_text(hjust = 0.5, color = "red4")) +
+  ggtitle(expression(~delta^15*N~"(\u2030) (excess)")) + 
+  labs(y = expression(~delta^15*N~"(\u2030)")) +
+  scale_x_discrete(labels = c('new leaves','new twigs','old leaves', 'old twigs'))+
+  theme(axis.title.x=element_blank()) +
+  theme(legend.position = "none")
+  
+## Total 15N recovery (see how to start an axis lab with superscript by using PASTE)
+
+ggplot(branch_15N_wider, aes(x=compartment, y=N15.rec, fill=compartment))+
+  geom_boxplot() + ggtitle(expression(paste(' '^{15}, "N (%) recovered by compartment", sep = "")))  + theme_bw(base_size = 12) +
+  theme(plot.title = element_text(hjust = 0.5)) +  guides(fill=FALSE) +
+  labs(y = (expression(paste(' '^{15}, "N (%)", sep = ""))) ) +
+  scale_x_discrete(labels = c('new leaves','new twigs','old leaves', 'old twigs'))
+
+

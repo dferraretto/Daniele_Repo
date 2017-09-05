@@ -31,11 +31,10 @@ treated_branches = branch_15N[branch_15N$T_C == "T",]
 control_branches = branch_15N[branch_15N$T_C == "C",]
 # d15N in treatment twigs and leaves
 p1 = ggplot(treated_branches, aes(x=compartment, y=d15N, fill=factor(compartment)))+
-  geom_boxplot() + 
+  geom_boxplot() + theme_bw(base_size = 12) +
   theme(plot.title = element_text(hjust = 0.1, size = 16, colour = 'red4'),
                          plot.background = element_rect(fill = "transparent",colour = NA)) +
-  theme_bw(base_size = 12) +
-  ggtitle(expression(~delta^15*N~"(\u2030) (treatment)")) + 
+    ggtitle(expression(~delta^15*N~"(\u2030) (treatment)")) + 
   labs(y = expression(~delta^15*N~"(\u2030)")) +
   scale_x_discrete(labels = c('new leaves','new twigs','old leaves', 'old twigs'))
 
@@ -50,14 +49,16 @@ p2 = ggplot(control_branches, aes(x=compartment, y=d15N, fill=factor(compartment
 
 
 # Girdling effect?
-p3 = ggplot(treated_branches, aes(x=compartment, y=d15N, fill=factor(Girdling)))+
-  geom_boxplot() + 
-theme(plot.title = element_text(hjust = 0.1, size = 16, colour = 'red4'),
+p3 = ggplot(treated_branches, aes(x=compartment, y=d15N, fill=Girdling))+
+  geom_boxplot() + theme_bw(base_size = 12) +
+theme(plot.title = element_text(hjust = 0.5, size = 16, colour = 'red4'),
       plot.background = element_rect(fill = "transparent",colour = NA)) +
-  theme_bw(base_size = 12) +
-   ggtitle(expression("Girdling effect on"~delta^15*N~"(treatment)")) + 
+     ggtitle(expression("Girdling effect on"~delta^15*N~"(treatment)")) + 
   labs(y = expression(~delta^15*N~"(\u2030)")) +
-scale_x_discrete(labels = c('new leaves','new twigs','old leaves', 'old twigs'))
+scale_x_discrete(labels = c('new leaves','new twigs','old leaves', 'old twigs')) +
+  scale_fill_discrete(name="Girdling",
+                      breaks=c("FALSE", "TRUE"),
+                      labels=c("Girdled", "Not girdled"))
 
 
 #tree effect? 
