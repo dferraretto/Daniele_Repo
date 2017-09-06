@@ -40,14 +40,24 @@ branch_15N_wider$N15.rec = (((branch_15N_wider$d15N_T-branch_15N_wider$d15N_C)*d
   (1+((branch_15N_wider$d15N_T-branch_15N_wider$d15N_C)*d+d)/1000) * # = 15Nexcess perc
   (branch_15N_wider$Total_N_perc_T * branch_15N_wider$DM_by_length_T)*1000*100/ app # = N/applied 15N; 1000 e' per convertire i g DM in mg!, 100 da formula
 
-total.15N.rec = aggregate(N15.rec ~ branch, branch_15N_wider, FUN = sum)
+# correcting factor: scale the real length of each branch in order to calculate the real amount of 15N applied per length (the former is calculated by
+# using the length factor LF, which was obtained in the field by measuring the main sub-branches of each branch)
 
-d15N.mean = aggregate(d15N_T ~ compartment, branch_15N_wider, FUN = mean)
-mean.15N.rec = aggregate(N15.rec ~ compartment, branch_15N_wider, FUN = mean)
-branch_15N_wider$d15N.exc = branch_15N_wider$d15N_T-branch_15N_wider$d15N_C
+ratio.15N <- read_csv("C:/Users/s1373890/Daniele_Repo/15N_experiment/15N_branches/ratio_15N.csv")
+ratio.15N = ratio.15N[rep(seq_len(nrow(ratio.15N)), each=4),]
+ratio.15N$branch = as.factor(ratio.15N$branch)
+
+branch_15N_corrected = cbind(branch_15N_wider, ratio.15N[ , 2])
+branch_15N_corrected$N15.corrected = branch_15N_corrected$N15.rec*branch_15N_corrected$ratio
+
+total.15N.rec = aggregate(N15.corrected ~ branch, branch_15N_corrected, FUN = sum)
+
+d15N.mean = aggregate(d15N_T ~ compartment, branch_15N_corrected, FUN = mean)
+mean.15N.rec = aggregate(N15.corrected ~ compartment, branch_15N_corrected, FUN = mean)
+branch_15N_corrected$d15N.exc = branch_15N_corrected$d15N_T-branch_15N_corrected$d15N_C
 
 #######             PLOTS             ##############
-
+library(ggplot2)
 # By Compartment:
 
 ## Total N %
@@ -68,7 +78,7 @@ ggplot(branch_15N_wider, aes(x=compartment, y=d15N.exc, fill=compartment))+
   
 ## Total 15N recovery (see how to start an axis lab with superscript by using PASTE)
 
-ggplot(branch_15N_wider, aes(x=compartment, y=N15.rec, fill=compartment))+
+ggplot(branch_15N_corrected, aes(x=compartment, y=N15.corrected, fill=compartment))+
   geom_boxplot() + ggtitle(expression(paste(' '^{15}, "N (%) recovered by compartment", sep = "")))  + theme_bw(base_size = 12) +
   theme(plot.title = element_text(hjust = 0.5)) +  guides(fill=FALSE) +
   labs(y = (expression(paste(' '^{15}, "N (%)", sep = ""))) ) +
