@@ -4,7 +4,7 @@
 
 rm(list=ls())
 
-#setwd("M:/My PhD/R/PhD-local_repo")
+setwd("C:/Users/Daniele Ferraretto/Documents/Daniele_Repo") #from PC
 setwd("C:/Users/s1373890/Daniele_Repo")
 
 source("mikerspencer/Error_propagation_TF_SF_RF_fog.R")

@@ -14,12 +14,12 @@
  rm(list=ls())
 
 
-.libPaths("C:/Workspace/R") # adjust the issues with my desktop demmerda
+#.libPaths("C:/Workspace/R") # adjust the issues with my desktop demmerda
 ### set working dir for pc:
-#setwd("C:/Users/Daniele Ferraretto/Documents/PhD-local_repo")
+setwd("C:/Users/Daniele Ferraretto/Documents/Daniele_Repo")
 ### setwd per desktop
 #setwd("M:/My PhD/R/PhD-local_repo")
-setwd("C:/Users/s1373890/Daniele_Repo")
+#setwd("C:/Users/s1373890/Daniele_Repo")
 
 ##########          THROUGHFALL PROPAGATION ERROR          #############
 #                      by  SAMPLING DATE (1/2)
@@ -527,3 +527,4 @@ long.N.error = rbind(dRF.err, dTF.err, dSF.err, dIN.err, dOUT.err)
 long.N.error = transform(long.N.error, Ym = as.yearmon(as.character(Ym), "%Y%m"))
 long.N.error$month = format(long.N.error$mY, "%m")
 long.N.error$year = format(long.N.error$mY, "%Y")
+

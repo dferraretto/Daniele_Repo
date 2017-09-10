@@ -7,12 +7,12 @@
 # clear the memory
 #rm(list=ls())
 
-.libPaths("C:/Workspace/R") # adjust the issues with my desktop demmerda
+#.libPaths("C:/Workspace/R") # adjust the issues with my desktop demmerda
 ### set working dir for pc:
 #setwd("C:/Users/Daniele Ferraretto/Documents/PhD-local_repo")
 ### setwd per desktop
 #setwd("M:/My PhD/R/PhD-local_repo")
-setwd("C:/Users/s1373890/Daniele_Repo")
+#setwd("C:/Users/s1373890/Daniele_Repo")
 
 # --------------------------------------------------------
 # Connect to SQL db
@@ -92,11 +92,6 @@ table.m.NX$N.balance = (table.m.NX$NH4.N.input + table.m.NX$NO3.N.input) - (tabl
 
 long.N.RFTSW = melt(table.m.NX, id.vars = "mY") 
 
-# clear from useless files from RFTSW.monthly:
-rm(db, fog.m.vol, long.TF.RF.fog.depth, mNH4fog, mNH4RF, mNH4SF, mNH4TF, mNO3fog, mNO3RF, mNO3SF, mNO3TF, 
-   monthlyCSW.NH4, monthlyCSW.NO3, monthlyNH4.fog, monthlyNH4.RF,monthlyNH4.SF,monthlyNH4.TF,monthlyNO3.fog,monthlyNO3.RF,
-   monthlyNO3.SF,monthlyNO3.TF,monthlyTSW.NH4,monthlyTSW.NO3,RF.m.vol,tf.m.vol,TF.RF.depth,TF.RF.fog.depth)
-
 # turn character into month+year, month (numeric) and year(numeric):
 
 long.N.RFTSW$month = format(long.N.RFTSW$mY, "%m")
@@ -108,14 +103,14 @@ long.N.RFTSW$year = format(long.N.RFTSW$mY, "%Y")
 
 # **************************************************************************************************
 # all time sum (by column, needed for the "N fluxes in Griffin Forest, years 2011-2016")
-#alltime.NX = cbind(monthlyNH4.RF, monthlyNO3.RF, monthlyNH4.fog, monthlyNO3.fog, monthlyNH4.TF, monthlyNO3.TF, monthlyNH4.SF, monthlyNO3.SF)
-#alltime.NX = alltime.NX[ , -which(names(alltime.NX) %in% "mY")]
-#sum = colSums(alltime.NX)
+alltime.NX = cbind(monthlyNH4.RF, monthlyNO3.RF, monthlyNH4.fog, monthlyNO3.fog, monthlyNH4.TF, monthlyNO3.TF, monthlyNH4.SF, monthlyNO3.SF)
+alltime.NX = alltime.NX[ , -which(names(alltime.NX) %in% "mY")]
+sum = colSums(alltime.NX)
 # per KAte avevo fatto una somma "Manuale", ma ora che ho creato il vettore sum posso sommare le voci qui sotto, se servira'
 
 # housekeeping:
-#rm(monthlyNH4.RF, monthlyNH4.fog, monthlyNH4.SF, monthlyNH4.TF, monthlyNO3.fog, monthlyNO3.RF, monthlyNO3.TF,
-   #monthlyNO3.SF, mNH4fog, mNH4RF, mNH4SF, mNH4TF, mNO3fog, mNO3RF, mNO3SF, mNO3TF, monthlyCSW.NH4, monthlyCSW.NO3, monthlyTSW.NH4, monthlyTSW.NO3)
+rm(monthlyNH4.RF, monthlyNH4.fog, monthlyNH4.SF, monthlyNH4.TF, monthlyNO3.fog, monthlyNO3.RF, monthlyNO3.TF,
+   monthlyNO3.SF, mNH4fog, mNH4RF, mNH4SF, mNH4TF, mNO3fog, mNO3RF, mNO3SF, mNO3TF, monthlyCSW.NH4, monthlyCSW.NO3, monthlyTSW.NH4, monthlyTSW.NO3)
 
 
 
