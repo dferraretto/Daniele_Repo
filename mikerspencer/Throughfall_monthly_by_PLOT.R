@@ -6,7 +6,7 @@
 # --------------------------------------------------------
 #rm(list=ls())
 
-.libPaths("C:/Workspace/R") # adjust the issues with my desktop demmerda
+#.libPaths("C:/Workspace/R") # adjust the issues with my desktop demmerda
 
 library(RSQLite)
 
@@ -143,6 +143,8 @@ rm(tf.vol.dd, meanddNH4TFT, meanddNO3TFT, meanddNH4TFC, meanddNO3TFC, tf, tfc, t
 # multiply them per 10000/1000000 (I can add this to the post merge operation)
 
 # TFC and TFT TABLE AND PLOTS
+library(zoo)
+
 TF1.by.plot = merge(monthlyNH4.TFT, monthlyNO3.TFT, by = "mY")# "labelled" vol but it's depth!!!
 TF2.by.plot = merge(monthlyNH4.TFC, monthlyNO3.TFC, by = "mY")# "labelled" vol but it's depth!!!
 TF.by.plot = merge(TF1.by.plot, TF2.by.plot, by = "mY")

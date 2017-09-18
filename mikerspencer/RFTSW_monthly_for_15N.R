@@ -7,12 +7,12 @@
 # clear the memory
 # rm(list=ls())
 
-.libPaths("C:/Workspace/R") # adjust the issues with my desktop demmerda
+#.libPaths("C:/Workspace/R") # adjust the issues with my desktop demmerda
 ### set working dir for pc:
 #setwd("C:/Users/Daniele Ferraretto/Documents/PhD-local_repo")
 ### setwd per desktop
 #setwd("M:/My PhD/R/PhD-local_repo")
-setwd("C:/Users/s1373890/Daniele_Repo")
+#setwd("C:/Users/s1373890/Daniele_Repo")
 
 # --------------------------------------------------------
 # Connect to SQL db

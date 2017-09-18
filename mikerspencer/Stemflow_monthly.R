@@ -93,3 +93,4 @@ colnames(mNH4SF)=c("mY", "vals", "site", "var")
 
 #housekeeping
 rm(sf, SF.class, SF.class.NH4, SF.class.NO3, stemdbh, dbh.class, meanddNH4SF, meanddNO3SF, both, NH4.sf, NO3.sf)
+
