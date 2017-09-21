@@ -86,7 +86,7 @@ RFTF.err = ggplot(data = N.RFTF.err, aes (month, mean, fill = variable))
 
 plot.RFTF = RFTF.err + 
   geom_bar(stat = "identity", position = position_dodge()) + 
-  geom_errorbar(aes(ymin = mean-err, ymax = mean+err), width = .1, position = position_dodge(.9)) +
+  geom_errorbar(aes(ymin = mean-err, ymax = mean+err), width = .25, position = position_dodge(.9)) +
   scale_fill_manual(values = c("cadetblue4", "cadetblue2", "Dark Green", "Yellow Green"), name = "N flux \n and form",
                     labels = c(expression(~RF~NH[4]*-N), expression(~RF~NO[3]*-N), expression(~TF~NH[4]*-N), expression(~TF~NO[3]*-N))) +
   facet_grid(year ~ .) + ggtitle("Wet deposition and N content in throughfall") +

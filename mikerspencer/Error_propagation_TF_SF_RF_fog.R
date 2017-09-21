@@ -11,12 +11,12 @@
 
 
 # clear the memory
- rm(list=ls())
+rm(list=ls())
 
 
 #.libPaths("C:/Workspace/R") # adjust the issues with my desktop demmerda
 ### set working dir for pc:
-setwd("C:/Users/Daniele Ferraretto/Documents/Daniele_Repo")
+#setwd("C:/Users/Daniele Ferraretto/Documents/Daniele_Repo")
 ### setwd per desktop
 #setwd("M:/My PhD/R/PhD-local_repo")
 #setwd("C:/Users/s1373890/Daniele_Repo")
@@ -53,8 +53,8 @@ TF.depth.SD=aggregate(vals ~ date, data = TF, FUN = sd, na.rm = TRUE )
 
 TF.N = as.data.frame(table(TF$date))
 
-# A4. SE = SD/(N)^0.5. SE (95%) = 1.96*SE
-TF.SE.95 =  as.data.frame(1.96*TF.depth.SD$vals/(TF.N$Freq)^0.5)
+# A4. SE = SD/(N)^0.5. SE (95%) = 2.110*SE; df = 17
+TF.SE.95 =  as.data.frame(2.110*TF.depth.SD$vals/(TF.N$Freq)^0.5)
 
 TF.SE.95 = cbind(TF.N$Var1, TF.SE.95)
 names(TF.SE.95) = c("date", "depth.SE.95")
@@ -94,9 +94,9 @@ NO3.TF.N = as.data.frame(table(NO3.TF$date))
 NH4.TF.N = as.data.frame(table(NH4.TF$date))
 
 
-# B4. SE = SD/(N)^0.5. SE (95%) = 1.96*SE
-TFNO3.SE.95 =  as.data.frame(1.96*NO3.TF.SD$TF.NO3.SD/(NO3.TF.N$Freq)^0.5)
-TFNH4.SE.95 =  as.data.frame(1.96*NH4.TF.SD$TF.NH4.SD/(NH4.TF.N$Freq)^0.5)
+# B4. SE = SD/(N)^0.5. SE (95%) = 2.110*SE
+TFNO3.SE.95 =  as.data.frame(2.110*NO3.TF.SD$TF.NO3.SD/(NO3.TF.N$Freq)^0.5)
+TFNH4.SE.95 =  as.data.frame(2.110*NH4.TF.SD$TF.NH4.SD/(NH4.TF.N$Freq)^0.5)
 
 
 TFLAB.SE.95 = cbind(NO3.TF.N$Var1, TFNO3.SE.95, TFNH4.SE.95)
@@ -374,8 +374,8 @@ RF.depth.SD=aggregate(vals ~ date, data = RF, FUN = sd, na.rm = TRUE )
 
 RF.N = as.data.frame(table(RF$date))
 
-# A4. SE = SD/(N)^0.5. SE (95%) = 1.96*SE
-RF.SE.95 =  as.data.frame(1.96*RF.depth.SD$vals/(RF.N$Freq)^0.5)
+# A4. SE = SD/(N)^0.5. SE (95%) = 12.706*SE degrees of freedom = 1!!!
+RF.SE.95 =  as.data.frame(12.706*RF.depth.SD$vals/(RF.N$Freq)^0.5)
 
 RF.SE.95 = cbind(RF.N$Var1, RF.SE.95)
 names(RF.SE.95) = c("date", "depth.SE.95")
@@ -411,8 +411,8 @@ NO3.RF.N = as.data.frame(table(NO3.RF$date))
 NH4.RF.N = as.data.frame(table(NH4.RF$date))
 
 # B4. SE = SD/(N)^0.5. SE (95%) = 1.96*SE
-RFNO3.SE.95 =  as.data.frame(1.96*NO3.RF.SD$RF.NO3.SD/(NO3.RF.N$Freq)^0.5)
-RFNH4.SE.95 =  as.data.frame(1.96*NH4.RF.SD$RF.NH4.SD/(NH4.RF.N$Freq)^0.5)
+RFNO3.SE.95 =  as.data.frame(12.706*NO3.RF.SD$RF.NO3.SD/(NO3.RF.N$Freq)^0.5)
+RFNH4.SE.95 =  as.data.frame(12.706*NH4.RF.SD$RF.NH4.SD/(NH4.RF.N$Freq)^0.5)
 
 
 
