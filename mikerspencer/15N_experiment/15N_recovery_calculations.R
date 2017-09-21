@@ -14,9 +14,9 @@ d = 0.0036765 # R standard for 15N/14N
 # N.15.rec = (b/a)*((c*d+d)/1000)/(1+((c*d+d)/1000))*100
 
 #################             WINTER              ###################
-
+library(readr)
 # Import database
-winter_recovery <- read_csv("C:/Users/s1373890/Daniele_Repo/15N_experiment/15N_fieldlab/winter_recovery.csv")
+winter_recovery <- read_csv("~/Daniele_Repo/15N_experiment/15N_fieldlab/winter_recovery.csv")
 
 # wide to long
 library(reshape2)
@@ -26,7 +26,7 @@ winter_rec_long = melt(winter_recovery, id.vars = c("Date", "Tree", "N_form", "1
 winter_rec_long$N15.rec = ((winter_rec_long$value*d+d)/1000 * winter_rec_long$N_rec)/winter_rec_long$`15N_applied`*100
 library(ggplot2)
 
-ggplot(winter_rec_long, aes(x = N_form, y = N15.rec)) + 
+ggplot(winter_rec_long, aes(x = compartment, y = N15.rec)) + 
   geom_boxplot(aes(fill = N_form)) +
   theme(plot.title = element_text(hjust = 0.1, size = 16, colour = 'red4'),
         plot.background = element_rect(fill = "transparent",colour = NA)) +
@@ -43,6 +43,7 @@ ggplot(winter_rec_long, aes(x = N_form, y = N15.rec)) +
 N15w.rec.mean <- tapply(winter_rec_long$N15.rec, winter_rec_long$N_form, mean)
 # select two rows from N15.rec.mean, one for each unique data (NH4, NO3)
 N15.win.mean =  winter_rec_long[c(1,12), c(3,6:9)]
+
 # error propagation IF I only consider the binomy XY (X = d15N recovered, Y = N recovered)
 wrong.error15N = N15w.rec.mean * ((N15.win.mean$SD_d15N*2/N15.win.mean$mean_d15N)^2+(N15.win.mean$SD_Nrec*2/N15.win.mean$mean_Nrec)^2)^0.5
 
@@ -63,7 +64,7 @@ error15N.aXY.aY = ((d/1000 * N15w.rec.mean *((N15.win.mean$SD_d15N*2/N15.win.mea
 
 
 # Import database
-summer_recovery <- read_csv("C:/Users/s1373890/Daniele_Repo/15N_experiment/15N_fieldlab/summer_recovery.csv")
+summer_recovery <- read_csv("~/Daniele_Repo/15N_experiment/15N_fieldlab/summer_recovery.csv")
 
 
 # 15N recovery in TF, %: 

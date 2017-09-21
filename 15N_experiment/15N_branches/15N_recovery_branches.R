@@ -19,7 +19,7 @@ branch_15N <- read_csv("~/Daniele_Repo/15N_experiment/15N_branches/branch_15N.cs
 
 app = 0.463702762 # 15N applied to the branches (mg/cm)
 
-d = 0.0036765 # R standard for 15N/14N
+AR = 0.0036765 # R standard for 15N/14N
 
 # Prepare the dataset: all characters to factors
 cols <- c("T_C", "Girdling", "Tree", "compartment", "branch")
@@ -35,6 +35,9 @@ branch_15N_wider = dcast(setDT(branch_15N), branch + compartment  ~ T_C, value.v
 
 # 15N recovery in BRANCHES per compartment, %: (see 15N formula explained.doc, adapted)
 # 15Nsample = (cd+d)/1000/(1+(cd+d)/1000)   15Nexcess
+
+
+
 
 branch_15N_wider$N15.rec = (((branch_15N_wider$d15N_T-branch_15N_wider$d15N_C)*d+d)/1000)/ 
   (1+((branch_15N_wider$d15N_T-branch_15N_wider$d15N_C)*d+d)/1000) * # = 15Nexcess perc
