@@ -7,7 +7,7 @@
 # clear the memory
 rm(list=ls())
 
-.libPaths("C:/Workspace/R") # adjust the issues with my desktop demmerda
+#.libPaths("C:/Workspace/R") # adjust the issues with my desktop demmerda
 ### set working dir for pc:
 #setwd("C:/Users/Daniele Ferraretto/Documents/PhD-local_repo")
 ### setwd per desktop
@@ -15,7 +15,7 @@ rm(list=ls())
 setwd("C:/Users/s1373890/Daniele_Repo")
 
 library(readr)
-N_Ndep_15N_simplified <- read_csv("C:/Users/s1373890/Daniele_Repo/15N_experiment/15N_fieldlab/15N_Ndep_simplified_15Nchecked.csv")
+N_Ndep_15N_simplified <- read_csv("~/Daniele_Repo/15N_experiment/15N_fieldlab/15N_Ndep_simplified_15Nchecked.csv")
 
 #### NOTE: all NH4 and NO3 have been cleaned by blanks in the .csv file  ########
 
