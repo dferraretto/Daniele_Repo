@@ -7,17 +7,20 @@
 # clear the memory
 rm(list=ls())
 
-#.libPaths("C:/Workspace/R") # adjust the issues with my desktop demmerda
+### SETTINGS (IGNORE THESE)
+.libPaths("C:/Workspace/R") # adjust the issues with my desktop demmerda
 ### set working dir for pc:
 setwd("C:/Users/Daniele Ferraretto/Documents/Daniele_Repo")
 ### setwd per desktop
 #setwd("M:/My PhD/R/PhD-local_repo")
 setwd("C:/Users/s1373890/Daniele_Repo")
 
-library(readr)
-branch_15N <- read_csv("~/Daniele_Repo/15N_experiment/15N_branches/branch_15N.csv")
 
-app = 0.463702762 # 15N applied to the branches (mg/cm)
+
+library(readr)
+branch_15N <- read_csv("15N_experiment/15N_branches/branch_15N.csv") # ~/Daniele_Repo/ FOR MY LAP
+
+app = 0.00463702762 # 15N applied to the branches (mg/cm)
 
 d = 0.0036765 # R standard for 15N/14N
 
@@ -26,10 +29,10 @@ cols <- c("T_C", "Girdling", "Tree", "compartment", "branch")
 
 branch_15N[cols] <- lapply(branch_15N[cols], factor)
 
-# long-ish to wide
+# long to wide
 
 library(data.table)
-# https://stackoverflow.com/questions/37622935/wide-format-with-dcast-data-table: per dcast mi serve una table => setDT
+# https://stackoverflow.com/questions/37622935/wide-format-with-dcast-data-table: as dcast works on tables => setDT
 branch_15N_wider = dcast(setDT(branch_15N), branch + compartment  ~ T_C, value.var = c("Total_N_perc","d15N", "DM_by_length"))
 
 
@@ -37,13 +40,13 @@ branch_15N_wider = dcast(setDT(branch_15N), branch + compartment  ~ T_C, value.v
 # 15Nsample = (cd+d)/1000/(1+(cd+d)/1000)   15Nexcess
 
 branch_15N_wider$N15.rec = (((branch_15N_wider$d15N_T-branch_15N_wider$d15N_C)*d+d)/1000)/ 
-  (1+((branch_15N_wider$d15N_T-branch_15N_wider$d15N_C)*d+d)/1000) * # = 15Nexcess perc
-  (branch_15N_wider$Total_N_perc_T * branch_15N_wider$DM_by_length_T)*1000*100/ app # = N/applied 15N; 1000 e' per convertire i g DM in mg!, 100 da formula
+  (1+((branch_15N_wider$d15N_T-branch_15N_wider$d15N_C)*d+d)/1000) * # = 15N excess perc
+  (branch_15N_wider$Total_N_perc_T * branch_15N_wider$DM_by_length_T)*1000*100/ app # = N/applied 15N; 1000 to convert DM from g to mg
 
 # correcting factor: scale the real length of each branch in order to calculate the real amount of 15N applied per length (the former is calculated by
 # using the length factor LF, which was obtained in the field by measuring the main sub-branches of each branch)
 
-ratio.15N <- read_csv("~/Daniele_Repo/15N_experiment/15N_branches/ratio_15N.csv")
+ratio.15N <- read_csv("15N_experiment/15N_branches/ratio_15N.csv") # ~/Daniele_Repo/ FOR LAPTOP
 ratio.15N = ratio.15N[rep(seq_len(nrow(ratio.15N)), each=4),]
 ratio.15N$branch = as.factor(ratio.15N$branch)
 
