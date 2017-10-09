@@ -1,18 +1,22 @@
 # --------------------------------------------------------
   #  15N on branches data analysis
   #  started on September 04th 2017
-  #  updated: 18th September 2017, after 
-  # --------------------------------------------------------
+  #  updated: 18th September 2017, after the course at INRA
+# --------------------------------------------------------
 # --------------------------------------------------------
 # clear the memory
 rm(list=ls())
 
+#   ignore these - they are different settings for my desktop that needs to know where to recover the libraries and 
+# my laptop
 .libPaths("C:/Workspace/R") # adjust the issues with my desktop demmerda
 ### set working dir for pc:
 setwd("C:/Users/Daniele Ferraretto/Documents/Daniele_Repo")
 ### setwd per desktop
 #setwd("M:/My PhD/R/PhD-local_repo")
 setwd("C:/Users/s1373890/Daniele_Repo")
+### END OF SETTINGS
+
 
 library(readr)
 branch_15N <- read_csv("15N_experiment/15N_branches/branch_15N.csv") # ~/Daniele_Repo/ in case needed from laptop
@@ -26,13 +30,13 @@ cols <- c("T_C", "Girdling", "Tree", "compartment", "branch")
 
 branch_15N[cols] <- lapply(branch_15N[cols], factor)
 
-#g to mg for DM CHECKED
+#g to mg for DM CHECKED (dry weight was expressed in grams in my .csv file)
 branch_15N$DM_by_length = branch_15N$DM_by_length * 1000
 
-# long-ish to wide
+# long to wide
 
 library(data.table)
-# https://stackoverflow.com/questions/37622935/wide-format-with-dcast-data-table: per dcast mi serve una table => setDT
+# https://stackoverflow.com/questions/37622935/wide-format-with-dcast-data-table:  dcast needs a table => setDT
 branch_15N_wider = dcast(setDT(branch_15N), branch + compartment  ~ T_C, value.var = c("Total_N_perc","d15N", "DM_by_length"))
 
 # R in labelled and unlabelled samples CHECKED
@@ -81,17 +85,17 @@ branch_15N_corrected$d15N.exc = branch_15N_corrected$d15N_T-branch_15N_corrected
 
 #######             PLOTS             ##############
 library(ggplot2)
-# By Compartment:
 
-## Dry weight of each organ
 
-ggplot(branch_15N_corrected, aes(x=compartment, y=DM_by_length_T, fill=compartment,))+
+## Dry weight of each organ by compartment
+
+ggplot(branch_15N_corrected, aes(x=compartment, y=DM_by_length_T, fill=compartment))+
   geom_boxplot() + ggtitle("Dry weight of labelled branches (g/cm) per each organ")  + theme_bw(base_size = 12) +
   theme(plot.title = element_text(hjust = 0.5), axis.title.x=element_blank()) +  #axis.title.x rimuove il nome dell'asse lasciando quello dei livelli
   labs(y = "DM (g/cm)") + guides(fill=FALSE) + 
   scale_x_discrete(labels = c('new leaves','new twigs','old leaves', 'old twigs'))
 
-# N content per organ (%). NOTE: per il picea abies sotto 1,3% in leaves e' deficient!
+# N content per organ (%). NOTE:  picea abies under 1,3% N in needles is deficient!
 ggplot(branch_15N_corrected, aes(x=compartment, y=Total_N_perc_T, fill=compartment)) +
   geom_boxplot() + theme_bw(base_size = 12) + theme(plot.title = element_text(hjust = 0.5), axis.title.x=element_blank()) +
   ggtitle("N content per organ (%)") + 
