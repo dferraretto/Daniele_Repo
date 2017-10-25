@@ -1,4 +1,4 @@
-sample,Measure 1,Measure 2,mean d,dbh class
+sample,Measure 1,Measure 2,mean_d,dbh class
 T10S1,24,24.5,24.25,7
 T10S2,22,21.5,21.75,5
 T10S3,19,19,19,4

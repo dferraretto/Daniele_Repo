@@ -45,7 +45,7 @@ meanddNO3SF$mY=strftime(meanddNO3SF$date,"%Y%m") # creates month-Year column
 monthlyNO3.SF = aggregate(NO3.N.SF ~ mY,  data = meanddNO3SF, FUN = sum)
 
 # converting into kg/ha:
-monthlyNO3.SF$NO3.N.SF = monthlyNO3.SF$NO3.N.SF*1883/1000000
+monthlyNO3.SF$NO3.N.SF = monthlyNO3.SF$NO3.N.SF*1750/1000000 # number of trees changed from 1883 to 1750 (=1/3 thinned) on 25/10/2017
 
 # STEP 4: prepare the df to be bound to RF (and/or plot values)
 
@@ -80,7 +80,7 @@ meanddNH4SF$mY=strftime(meanddNH4SF$date,"%Y%m") # creates month-Year column
 monthlyNH4.SF = aggregate(NH4.N.SF ~ mY,  data = meanddNH4SF, FUN = sum)
 
 # converting into g/ha:
-monthlyNH4.SF$NH4.N.SF = monthlyNH4.SF$NH4.N.SF*1883/1000000
+monthlyNH4.SF$NH4.N.SF = monthlyNH4.SF$NH4.N.SF*1750/1000000
 
 # STEP 4: prepare the df to be bound to RF (and/or plot values)
 
