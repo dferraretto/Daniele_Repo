@@ -6,7 +6,8 @@
 
 rm(list=ls())
 .libPaths("C:/Workspace/R")
-
+setwd("C:/Users/Daniele Ferraretto/Documents/Daniele_Repo")
+#or
 setwd("C:/Users/s1373890/Daniele_Repo")
 
 # --------------------------------------------------------
@@ -19,7 +20,7 @@ setwd("C:/Users/s1373890/Daniele_Repo")
       
 db = dbConnect(SQLite(), dbname="field_lab/Griffin.SQLite")
       
-# Select labdata from SQLite db (next step is two queries to avoid subset)
+# Select field data from SQLite db (next step is two queries to avoid subset)
 fielddata = dbGetQuery(db, "SELECT * FROM fielddata WHERE VALS >= 0 ORDER BY date")
 
 # no. of lines:
@@ -30,3 +31,26 @@ fielddata[cols] <- lapply(fielddata[cols], factor)
 
 nrow(fielddata) # 4236
 levels(fielddata$variable)
+
+library(dplyr)
+
+table.variables.freq = fielddata %>% 
+                       group_by(variable) %>%
+                       summarise(no_rows = length(variable))
+
+nlevels(fielddata$date)
+head(fielddata)
+tail(fielddata)
+
+# Select lab data from SQLite db (next step is two queries to avoid subset)
+labdata = dbGetQuery(db, "SELECT * FROM labdata WHERE VALS >= 0 ORDER BY date")
+# no. of lines:
+summary(labdata)
+cols = c("date", "sample", "site", "variable")
+labdata[cols] <- lapply(labdata[cols], factor)
+
+
+
+table.variables.freq = labdata %>% 
+  group_by(variable) %>%
+  summarise(no_rows = length(variable))
