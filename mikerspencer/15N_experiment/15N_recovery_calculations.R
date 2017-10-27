@@ -34,7 +34,7 @@ ggplot(winter_rec_long, aes(x = compartment, y = N15.rec)) +
   scale_fill_manual(values = c('NH4-N' ="red4",'NO3-N' ="pink"),
                     labels = c(expression(~NH[4]*-N), expression(~NO[3]*-N)), 
                     name = "N form") +
-  ggtitle(expression({}^15*N~~recovered~"(%) in throughfall after the summer application")) + #DIOSTRACANEILCRISTO HOW TO START a title/label with superscript/subscript numbers: https://stackoverflow.com/questions/33783643/expression-of-italics-and-superscripts-in-ggpot-axis-title
+  ggtitle(expression({}^15*N~~recovered~"(%) in throughfall after the summer application")) + # HOW TO START a title/label with superscript/subscript numbers: https://stackoverflow.com/questions/33783643/expression-of-italics-and-superscripts-in-ggpot-axis-title
   labs( x = "N form", y = expression({}^15*N~~recovered~"(%)"))
 
 

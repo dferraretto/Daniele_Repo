@@ -33,6 +33,8 @@ fog.C30D1 = dbGetQuery(db, "SELECT date, sample, vals, overflowing, QC, comments
 #http://stackoverflow.com/questions/8005154/conditionally-remove-dataframe-rows-with-r
 
 fog.C30D1.semicleaned <- fog.C30D1[!(fog.C30D1$QC=="1"), ]
+fog.C30D1.semicleaned = fog.C30D1.semicleaned[complete.cases(fog.C30D1.semicleaned),]
+
 fog.C30D1.cleaned <- fog.C30D1.semicleaned[!(fog.C30D1.semicleaned$overflowing=="1"), ] 
 
 
@@ -64,7 +66,7 @@ wide.RFfog.lm <- wide.RFfog.cleaned[(wide.RFfog.cleaned$diff>"0"), ]
 
 RFfog.lm = lm( C30D2 ~  C30D1, data = wide.RFfog.lm)
 
-summary(RFfog.lm)$r.squared # reactivate when rerunning this script with new data - R squared on November 2016 = 0.8101, on 03/04/17: 0.7931. mah.
+summary(RFfog.lm)$r.squared # reactivate when rerunning this script with new data - R squared on November 2016 = 0.8101, on 03/04/17: 0.7931. October 2017: 0.845. stramah.
 summary(RFfog.lm) #  p on November 2016 = ***, cioe' OVER THE TOP
 
 
@@ -145,6 +147,7 @@ fog.C30D1 = dbGetQuery(db, "SELECT date, sample, variable, vals FROM labdata WHE
 #http://stackoverflow.com/questions/8005154/conditionally-remove-dataframe-rows-with-r
 
 fog.C30D1.cleaned <- fog.C30D1[!(fog.C30D1$variable =="acidity"), ]
+# complete.cases to prevent dcast sclero not done here, but if there will be problems check this and do it like above (fielddata)
 fog.C30D1.NO3 <- fog.C30D1[fog.C30D1$variable =="NO3.N", ]
 fog.C30D1.NH4 <- fog.C30D1[fog.C30D1$variable =="NH4.N", ]
 
@@ -314,7 +317,7 @@ wide.prec.NH4 <- dcast(fog.C30D1.NH4, date ~ sample, value.var="vals")  # ready 
 
 ########           1. NH4. C30D1 ~ C30D2, precleared of "long term" outliers
 
-# elimino i fog<RF to be ready for lm:
+# get rid of fog<RF to be ready for lm:
 wide.prec.NH4$diff= wide.prec.NH4$C30D2 - wide.prec.NH4$C30D1
 #wide.prNH4.lm <- na.omit(wide.prec.NH4[wide.prec.NH4$diff>"0", ]) # non voglio questo perche' cazzo mi sega proprio luglio 2017
 

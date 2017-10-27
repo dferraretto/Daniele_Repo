@@ -37,13 +37,13 @@ field.data = function(file){
    # How many days since last sampling?
    days = as.numeric(as.Date(field[[1]][1,2]) - as.Date(field[[1]][2,2]))
    # Clean QC column
-   for(i in c(2:5)){
-      field[[i]]$QC[is.na(field[[i]]$QC)] = F
-   }
+   #for(i in c(2:5)){
+  #    field[[i]]$QC[is.na(field[[i]]$QC)] = F
+  # }
    # Clean overflowing columns
-   for(i in c(2, 4, 5)){
-      field[[i]]$Overflowing[is.na(field[[i]]$Overflowing)] = F
-   }
+  # for(i in c(2, 4, 5)){
+  #    field[[i]]$Overflowing[is.na(field[[i]]$Overflowing)] = F
+  # }
    # Define sites
    for(i in 3:5){
       field[[i]]$site = substr(field[[i]]$Sample, 1, 1)
@@ -250,4 +250,4 @@ lab.data = function(file){
    # Write to db
    dbWriteTable(conn=db, name="labdata", Nite, append=T, row.names=F)
 }
-# Nite$value e nite$variable vengono creati, così come le "colonne" id.vars, dalla funzione melt.
+# Nite$value e nite$variable vengono creati, cos? come le "colonne" id.vars, dalla funzione melt.

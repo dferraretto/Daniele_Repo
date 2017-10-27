@@ -51,3 +51,5 @@ source("repo/old_data.R")
 dbDisconnect(db)
 rm(f, field.data, lab.data, db, bucket, NH4, NO3, precip, sb, stem, stream, through, V.notch, v.notch.lookup, circle, colander, funnel, gutter, large, small, square)
 
+source("mikerspencer/Outliers.R")
+source("mikerspencer/fog_C30D1_regression_and_interpolation.R")
