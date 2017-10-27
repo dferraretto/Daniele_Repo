@@ -7,6 +7,8 @@
 rm(list=ls())
 .libPaths("C:/Workspace/R")
 
+setwd("C:/Users/Daniele Ferraretto/Documents/Daniele_Repo")
+#or
 setwd("C:/Users/s1373890/Daniele_Repo")
 
 # --------------------------------------------------------
@@ -20,7 +22,11 @@ setwd("C:/Users/s1373890/Daniele_Repo")
 db = dbConnect(SQLite(), dbname="field_lab/Griffin.SQLite")
       
 # Select field data from SQLite db (next step is two queries to avoid subset)
+
+fielddata = dbGetQuery(db, "SELECT * FROM fielddata WHERE VALS >= 0 ORDER BY date")
+
 fielddata = dbGetQuery(db, "SELECT * FROM fielddata  WHERE date between '2012-01-01' AND '2016-12-12' ORDER BY date")# no. of lines:
+
 
 
 summary(fielddata)
@@ -38,6 +44,12 @@ table.variables.freq = fielddata %>%
                        summarise(no_rows = length(variable))
 
 
+nlevels(fielddata$date)
+head(fielddata)
+tail(fielddata)
+
+
+
 # Select lab data from SQLite db (next step is two queries to avoid subset)
 labdata = dbGetQuery(db, "SELECT * FROM labdata WHERE VALS >= 0 ORDER BY date")
 # no. of lines:
@@ -46,6 +58,10 @@ cols = c("date", "sample", "site", "variable")
 labdata[cols] <- lapply(labdata[cols], factor)
 
 
+
+table.variables.freq = labdata %>% 
+  group_by(variable) %>%
+  summarise(no_rows = length(variable))
 
 table.variables.freq = fielddata %>% 
   group_by(variable) %>%
@@ -194,6 +210,7 @@ ggplot() +
   geom_point(data = SF.dry.lm, aes (DBH2, vals)) + 
   facet_grid(date ~ ., scales = "free_x")
 
+
 ggplot() + 
   geom_point(data = SF.wet.lm, aes (DBH2, vals)) + 
   facet_grid(date ~ ., scales = "free_x")
@@ -245,7 +262,6 @@ ggplot(data = SF.DBH, aes(x = DBH2, y = vals)) +
   labs(x = expression(paste("DBH"^"2"~"(cm"^"2"*")")), y = " stemflow volume (L)") + # good expression example for cm^2
   theme_bw(base_size = 14) +
   theme(plot.title=element_text(size = 16, hjust = 0.5))
-
 
 
 
