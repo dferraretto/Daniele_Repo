@@ -69,6 +69,8 @@ RFfog.lm = lm( C30D2 ~  C30D1, data = wide.RFfog.lm)
 summary(RFfog.lm)$r.squared # reactivate when rerunning this script with new data - R squared on November 2016 = 0.8101, on 03/04/17: 0.7931. October 2017: 0.845. stramah.
 summary(RFfog.lm) #  p on November 2016 = ***, cioe' OVER THE TOP
 
+par(mfrow=c(2,2)) # Change the panel layout to 2 x 2
+plot(RFfog.lm) # results: no values over cook's distance, fairly good Q-Q linear distribution, no extreme cases, fairly nicely fitted values vs residuals (almost horizontal line)
 
 # NOW PREDICT!    1. WHICH C30D2 VALUES? SELECT OF+QCs (it should work with any values within the min max C30D1 values)
                 # 1a RF.fog completo
