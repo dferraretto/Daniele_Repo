@@ -177,6 +177,15 @@ wide.prec.NH4 <- dcast(fog.C30D1.NH4, date ~ sample, value.var="vals")
 wide.prec.NO3$diff= wide.prec.NO3$C30D2 - wide.prec.NO3$C30D1
 wide.prNO3.lm <- na.omit(wide.prec.NO3[wide.prec.NO3$diff>"0", ])
 
+################# Fitting the data to be used for the regression:
+#  removing data 23 ex cook's distance & data 26 as extreme upper tail ##############
+wide.prNO3.lm = wide.prNO3.lm[!wide.prNO3.lm$date=="2013-06-20",]
+
+# NOW rerun and see. done, repeat the process with 2013-03-28 but giving a R2<original R2. Trying to remove the value 26 (upper tail)
+wide.prNO3.lm = wide.prNO3.lm[!wide.prNO3.lm$date=="2013-10-03",] # and this works just fine! R2 = 0.891!
+
+
+wide.prNO3.lm$date = as.factor(wide.prNO3.lm$date)
 # extracting fog values to be predicted
 predictNO3 =  na.omit(wide.prec.NO3[wide.prec.NO3$diff<"0", ])
 
@@ -184,9 +193,16 @@ predictNO3 =  na.omit(wide.prec.NO3[wide.prec.NO3$diff<"0", ])
 
 RFfog.lm = lm( C30D2 ~  C30D1, data = wide.prNO3.lm)
 
-summary(RFfog.lm)$r.squared # reactivate when rerunning this script with new data - R squared on November 2016 = 0.8331646, better than fielddata :)
+summary(RFfog.lm)$r.squared # reactivate when rerunning this script with new data - R squared on November 2017 = 0.8344; after the new double removal: 0.891
 
 summary(RFfog.lm) #  p on November 2016 = ***, cioe' OVER THE TOP
+
+
+par(mfrow=c(2,2)) # Change the panel layout to 2 x 2
+plot(RFfog.lm) # results: value 23 (06/2013) on cook's distance. Once removed, R2 increases, but shows value 20 (march 2013) over Cook's distance.
+               # if I remove this second value, pero', the R2 worsens to 0.82. Hence I will only remove the data 23.
+
+
 
 # extracting C30D1 values to be used to predict fog values
 
@@ -206,7 +222,10 @@ predictedNO3.fog$check =  predictedNO3.fog$lwr- predictedNO3.fog$C30D1
 # (lab/minimal contaminations) systematic errors. They need to be verified, or I would create a false input peak.
 # 17/12/2015: C30D1>>C31D1>C30D2. I will substitute C30D1 with C31D1 and then proceed to calculate the new fit value.
 # 2014-08-21: C30D1>>C31D1>C30D2. However, I will not push this substitution thing, as the difference C31-C30 is reasonable compared to the historical 
-# 24/07/2014: 
+# The point for the moethodology is, I compared C30 to C31 for a better understanding of values and possible contmainations, but the criteria adopteed was
+# a) as minimum modification as possible to the lab data and b) always work on avoiding artificial high input values (i.e. by removing the upper tail values
+# when building up the regression curve)
+
 # adjust 17/12/2015 by picking the fit value
 predictedNO3.fog[["51","lwr"]] = predictedNO3.fog[["51","fit"]]
 # Prepare the dataframe for the substitution
@@ -224,15 +243,36 @@ rm(fog.C30D1, fog.C30D1.cleaned, fog.C30D1.NO3, newdata, predictedNO3.fog.int, p
 wide.prec.NH4$diff= wide.prec.NH4$C30D2 - wide.prec.NH4$C30D1
 wide.prNH4.lm <- na.omit(wide.prec.NH4[wide.prec.NH4$diff>"0", ])
 
+################# Fitting the data to be used for the regression:
+#  removing data 23 ex cook's distance & data 26 as extreme upper tail ##############
+wide.prNH4.lm = wide.prNH4.lm[!wide.prNH4.lm$date=="2011-11-22",] # 3
+
+wide.prNH4.lm = wide.prNH4.lm[!wide.prNH4.lm$date=="2012-03-15",] # 8
+
+wide.prNH4.lm = wide.prNH4.lm[!wide.prNH4.lm$date=="2014-05-21",] # 32. COSI' SIAMO GIA' A r2 = 0.8911!
+
+#exoeriment: remove 20, 23 e 31:
+# wide.prNH4.lm = wide.prNH4.lm[!wide.prNH4.lm$date=="2013-03-28",] # 20 R2 = 0.700 bleah
+
+# wide.prNH4.lm = wide.prNH4.lm[!wide.prNH4.lm$date=="2014-04-24",] # 31 R2 = 0.62
+
+# wide.prNH4.lm = wide.prNH4.lm[!wide.prNH4.lm$date=="2014-05-21",] # 23 R2 = 0.624 experiment failed!
+
 # extracting fog values to be predicted
 predictNH4 =  na.omit(wide.prec.NH4[wide.prec.NH4$diff<"0", ])
 
 
 RFfog.lm = lm( C30D2 ~  C30D1, data = wide.prNH4.lm)
 
-summary(RFfog.lm)$r.squared # reactivate when rerunning this script with new data - R squared on April 2017 = 0.8117, always very good
+summary(RFfog.lm)$r.squared # reactivate when rerunning this script with new data - R squared on April 2017 = 0.8117; after the 3 removed data (Nov. 17): 0.888
 
 summary(RFfog.lm) #  p on November 2016 = ***, cioe' OVER THE TOP
+
+par(mfrow=c(2,2)) # Change the panel layout to 2 x 2
+
+plot(RFfog.lm) # cook's distance suggests to get rid of 3, which is also on the upper part of the QQ distribution with number 8 and 32 and ?
+
+
 
 # extracting C30D1 values to be used to predict fog values
 
@@ -248,8 +288,8 @@ predictedNH4.fog = cbind(predictNH4, predictedNH4.fog.int) # add the predicted f
 
 # Check if lwr value is enough to make differences to turn positive:
 predictedNH4.fog$check =  predictedNH4.fog$lwr- predictedNH4.fog$C30D1
-# adjust 17/12/2015, 15/11/2012 and 19/08/2016 by picking the fit value (try to turn this into an automatic check!)
-predictedNH4.fog[c("51","59","16"),"lwr"] = predictedNH4.fog[c("51","59","16"),"fit"]
+# adjust 17/12/2015  and 19/08/2016 by picking the fit value (try to turn this into an automatic check!); with the modified regression only 2 values instead than 3!
+predictedNH4.fog[c("51","59"),"lwr"] = predictedNH4.fog[c("51","59"),"fit"]
 # Prepare the dataframe for the substitution
 predictedNH4.fog = predictedNH4.fog[ , c("date", "lwr")] # values to be substituted in Griffin.SQlite!!
 predictedNH4.fog$sample = "C30D2"
@@ -291,10 +331,14 @@ rm(db, labdata, predicted.fog, predictedNH4.fog, predictedNO3.fog, w)
 ###########################################################################
 #                                                                         #
 #      This script creates a regression between fog data and C30D1 to     #
-#      predict C30D1 WHERE C30D1 IS NOT AVAILABLE, JULY 2017 ESPECIALLY.  #
+#      predict C30D1 WHERE C30D1 IS NOT AVAILABLE == JULY 2016            #
 #                                                                         #
-#     By: Daniele F.                        Last update: 10/04/2017       #
+#     By: Daniele F.                        Last update: 24/11/2017       #
 ###########################################################################
+# CHE DROGHE MI ERO FATTO? CIOE' QUI IL DATO ESISTE. O MEGLIO NON ESISTE PERCHE' ERA UN OUTLIER, OK, MA DOVEVO
+# INTERVENIRE PRIMA CAZZO. O NO? NO DAI, LO CREO DAL FOG CHE COMUNQUE E' PIU BASSO DI C31D1, ALTRIMENTI DOVREI SOSTITUIRE IL VALORE C30D1
+# CON QUELLO DI C31D1, MA POI DOVREI SOSTITUIRE VIA REGRESSIONI FOG CON UN NUOVO VALUE. A QUESTO PUNTO PREFERISCO FARE COSI' ANCHE IN QUESTO CASO
+# E# UN PRINCIPIO CONSERVATIVO PER STARE BASSI CON INPUT. ANCHE PERCHE' IL PROBLEMA ERA SOLO PER NH4. SCACAZZATA?
 
 # Creating a vector with all my sampling dates - syntax available in Mike file:
 db = dbConnect(SQLite(), dbname="field_lab/Griffin.SQLite") # let's see the format, likely to be a .csv file
@@ -320,7 +364,7 @@ wide.prec.NH4 <- dcast(fog.C30D1.NH4, date ~ sample, value.var="vals")  # ready 
 ########           1. NH4. C30D1 ~ C30D2, precleared of "long term" outliers
 
 # get rid of fog<RF to be ready for lm:
-wide.prec.NH4$diff= wide.prec.NH4$C30D2 - wide.prec.NH4$C30D1
+wide.prec.NH4$diff= wide.prec.NH4$C30D2 - wide.prec.NH4$C30D1 # NONE!
 #wide.prNH4.lm <- na.omit(wide.prec.NH4[wide.prec.NH4$diff>"0", ]) # non voglio questo perche' cazzo mi sega proprio luglio 2017
 
 # extracting fog values to be predicted
@@ -329,9 +373,22 @@ wide.prec.NH4$diff= wide.prec.NH4$C30D2 - wide.prec.NH4$C30D1
 
 RFfog.lm = lm(C30D1 ~  C30D2, data = wide.prec.NH4)
 
-summary(RFfog.lm)$r.squared # reactivate when rerunning this script with new data - R squared on August 2017 = 0.8696, always very good
+summary(RFfog.lm)$r.squared # reactivate when rerunning this script with new data - R squared on November 2017 = 0.859
 
 summary(RFfog.lm) #  p on November 2016 = ***, cioe' OVER THE TOP
+
+par(mfrow=c(2,2)) # Change the panel layout to 2 x 2
+
+plot(RFfog.lm) # cook's distance AND tails to be rejected: 3, 8, 66
+
+################# Fitting the data to be used for the regression:
+#  removing data 3, 8 ex cook's distance & extreme lower tail. 66 would fit the same conditions but once removed it lower R2, so it will stay ##############
+wide.prec.NH4 = wide.prec.NH4[!wide.prec.NH4$date=="2011-11-22",] # 3 R2 = 0.8766
+
+wide.prec.NH4 = wide.prec.NH4[!wide.prec.NH4$date=="2012-03-15",] # 8 R2 = 0.925!! 
+
+# wide.prec.NH4 = wide.prec.NH4[!wide.prec.NH4$date=="2017-05-07",] # 66 R2 = 0.9023 
+
 
 # extracting fog values to be used to predict C30D1 values
 
@@ -382,13 +439,15 @@ dbWriteTable(conn=db, name="labdata", labdata, overwrite = TRUE, append=F, row.n
 dbDisconnect(db)
 
 rm(list = ls())
+
+
 #-------------------------------------------------------------------------------
 #
 ###                 INTERPOLATION   for missing labdata               ########
 #      Note: this will be applied to NO3 on RF and fog only for 
 #      the dateS 2015-09-24 and February 2015
 #-------------------------------------------------------------------------------
-
+# NOTA PROVVISORIA 24/11/2017: SONO ARRIVATO FINO A QUI 
 # Creating a df with all my sampling dates
 db = dbConnect(SQLite(), dbname="field_lab/Griffin.SQLite") # let's see the format, likely to be a .csv file
 # syntax available in Mike file:
